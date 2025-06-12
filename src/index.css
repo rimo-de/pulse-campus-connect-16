@@ -224,4 +224,13 @@
   .gradient-border {
     @apply border border-transparent bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-border;
   }
+
+  /* Additional utility for the inspired design */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  }
+
+  .large-input {
+    @apply h-14 text-lg rounded-xl;
+  }
 }
