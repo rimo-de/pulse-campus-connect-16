@@ -191,6 +191,26 @@
   .progress-fill {
     @apply bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-500;
   }
+
+  /* Demo Account Styles */
+  .demo-account-card {
+    @apply flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 
+           border border-blue-100 hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 
+           transition-all duration-300 hover-scale;
+  }
+
+  .demo-account-role {
+    @apply font-semibold text-gray-800 text-sm;
+  }
+
+  .demo-account-email {
+    @apply text-xs text-gray-600 font-medium;
+  }
+
+  .demo-account-button {
+    @apply rounded-md border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 
+           hover:border-blue-300 transition-all duration-200 text-xs font-medium px-3 py-1;
+  }
 }
 
 @layer utilities {
