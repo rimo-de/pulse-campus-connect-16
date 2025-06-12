@@ -31,21 +31,21 @@ const LoginForm = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-full hover-scale">
               <GraduationCap className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Digital4 Pulse</h1>
+          <h1 className="text-3xl font-bold edu-gradient-text">Digital4 Pulse</h1>
           <p className="text-gray-600 mt-2">Educational Institution Management</p>
         </div>
 
-        <Card>
+        <Card className="edu-shadow">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle className="edu-gradient-text">Sign In</CardTitle>
             <CardDescription>
               Access your institutional dashboard
             </CardDescription>
@@ -60,6 +60,7 @@ const LoginForm = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
+                  className="auth-input"
                   required
                 />
               </div>
@@ -71,6 +72,7 @@ const LoginForm = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  className="auth-input"
                   required
                 />
               </div>
@@ -81,7 +83,7 @@ const LoginForm = () => {
                 </Alert>
               )}
               
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="edu-button" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -95,7 +97,7 @@ const LoginForm = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="edu-shadow">
           <CardHeader>
             <CardTitle className="text-sm">Demo Accounts</CardTitle>
           </CardHeader>
@@ -108,6 +110,7 @@ const LoginForm = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setEmail(account.email)}
+                    className="hover-scale"
                   >
                     {account.email}
                   </Button>

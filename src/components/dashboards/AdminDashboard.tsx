@@ -33,23 +33,23 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen gradient-bg">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 edu-shadow">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg hover-scale">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Digital4 Pulse</h1>
+                <h1 className="text-xl font-semibold edu-gradient-text">Digital4 Pulse</h1>
                 <p className="text-sm text-gray-500">Admin Dashboard</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <Avatar>
+                <Avatar className="hover-scale">
                   <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback>{user?.name?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
@@ -58,7 +58,7 @@ const AdminDashboard = () => {
                   <p className="text-xs text-gray-500">Administrator</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={logout} className="hover-scale">
                 Sign Out
               </Button>
             </div>
@@ -69,23 +69,23 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="px-6 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {user?.name}</h2>
+          <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold edu-gradient-text mb-2">Welcome back, {user?.name}</h2>
             <p className="text-gray-600">Here's what's happening at your institution today.</p>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat) => (
-              <Card key={stat.title}>
+              <Card key={stat.title} className="edu-card hover-scale">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-sm text-green-600">{stat.change} from last month</p>
+                      <p className="text-sm edu-positive">{stat.change} from last month</p>
                     </div>
-                    <div className="bg-blue-50 p-3 rounded-full">
+                    <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-3 rounded-full">
                       <stat.icon className="w-6 h-6 text-blue-600" />
                     </div>
                   </div>
@@ -99,10 +99,10 @@ const AdminDashboard = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action) => (
-                <Card key={action.title} className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card key={action.title} className="edu-card hover-scale cursor-pointer">
                   <CardHeader className="pb-3">
-                    <div className="bg-indigo-50 p-3 rounded-full w-fit">
-                      <action.icon className="w-6 h-6 text-indigo-600" />
+                    <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-3 rounded-full w-fit">
+                      <action.icon className="w-6 h-6 text-blue-600" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -116,7 +116,7 @@ const AdminDashboard = () => {
 
           {/* Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="edu-card">
               <CardHeader>
                 <CardTitle>Recent Enrollments</CardTitle>
                 <CardDescription>Latest student registrations</CardDescription>
@@ -128,7 +128,7 @@ const AdminDashboard = () => {
                     { name: 'Michael Chen', course: 'Data Analytics', time: '4 hours ago' },
                     { name: 'Sofia Garcia', course: 'Digital Marketing', time: '1 day ago' }
                   ].map((enrollment) => (
-                    <div key={enrollment.name} className="flex items-center justify-between">
+                    <div key={enrollment.name} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{enrollment.name}</p>
                         <p className="text-sm text-gray-500">{enrollment.course}</p>
@@ -140,7 +140,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="edu-card">
               <CardHeader>
                 <CardTitle>System Alerts</CardTitle>
                 <CardDescription>Important notifications</CardDescription>
@@ -148,11 +148,11 @@ const AdminDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-yellow-800">Server Maintenance</p>
+                    <p className="text-sm font-medium edu-highlight">Server Maintenance</p>
                     <p className="text-xs text-yellow-600">Scheduled for Sunday 2:00 AM - 4:00 AM</p>
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-green-800">Backup Completed</p>
+                    <p className="text-sm font-medium edu-positive">Backup Completed</p>
                     <p className="text-xs text-green-600">Database backup successful</p>
                   </div>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

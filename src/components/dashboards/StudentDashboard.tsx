@@ -48,23 +48,23 @@ const StudentDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen gradient-bg">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 edu-shadow">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-green-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 rounded-lg hover-scale">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Digital4 Pulse</h1>
+                <h1 className="text-xl font-semibold edu-gradient-text">Digital4 Pulse</h1>
                 <p className="text-sm text-gray-500">Student Portal</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <Avatar>
+                <Avatar className="hover-scale">
                   <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback>{user?.name?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
@@ -73,7 +73,7 @@ const StudentDashboard = () => {
                   <p className="text-xs text-gray-500">Student</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={logout} className="hover-scale">
                 Sign Out
               </Button>
             </div>
@@ -84,14 +84,14 @@ const StudentDashboard = () => {
       {/* Main Content */}
       <main className="px-6 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {user?.name}</h2>
+          <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold edu-gradient-text mb-2">Welcome back, {user?.name}</h2>
             <p className="text-gray-600">Continue your learning journey and track your progress.</p>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
+            <Card className="edu-card hover-scale">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -103,7 +103,7 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="edu-card hover-scale">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -115,7 +115,7 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="edu-card hover-scale">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -127,7 +127,7 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="edu-card hover-scale">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -145,7 +145,7 @@ const StudentDashboard = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">My Courses</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {courses.map((course) => (
-                <Card key={course.title} className="hover:shadow-md transition-shadow">
+                <Card key={course.title} className="course-card">
                   <CardHeader>
                     <CardTitle className="text-base">{course.title}</CardTitle>
                     <CardDescription>Instructor: {course.instructor}</CardDescription>
@@ -157,12 +157,17 @@ const StudentDashboard = () => {
                           <span>Progress</span>
                           <span>{course.progress}%</span>
                         </div>
-                        <Progress value={course.progress} className="h-2" />
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-fill" 
+                            style={{ width: `${course.progress}%` }}
+                          />
+                        </div>
                       </div>
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-sm font-medium text-yellow-800">{course.nextDeadline}</p>
+                        <p className="text-sm font-medium edu-highlight">{course.nextDeadline}</p>
                       </div>
-                      <Button className="w-full" variant="outline">
+                      <Button className="w-full edu-button" variant="outline">
                         <PlayCircle className="w-4 h-4 mr-2" />
                         Continue Learning
                       </Button>
@@ -175,7 +180,7 @@ const StudentDashboard = () => {
 
           {/* Upcoming Events and Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="edu-card">
               <CardHeader>
                 <CardTitle>Upcoming Events</CardTitle>
                 <CardDescription>Your schedule for the next few days</CardDescription>
@@ -183,9 +188,9 @@ const StudentDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   {upcomingEvents.map((event, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="bg-indigo-100 p-2 rounded-full">
-                        <Calendar className="w-4 h-4 text-indigo-600" />
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                      <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-2 rounded-full">
+                        <Calendar className="w-4 h-4 text-blue-600" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{event.title}</p>
@@ -197,26 +202,26 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="edu-card">
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>Frequently used features</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center hover-scale">
                     <BookOpen className="w-6 h-6 mb-2" />
                     <span className="text-sm">My Courses</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center hover-scale">
                     <FileText className="w-6 h-6 mb-2" />
                     <span className="text-sm">Assignments</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center hover-scale">
                     <Award className="w-6 h-6 mb-2" />
                     <span className="text-sm">Grades</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center hover-scale">
                     <Users className="w-6 h-6 mb-2" />
                     <span className="text-sm">Study Groups</span>
                   </Button>
