@@ -29,6 +29,11 @@ const LoginForm = () => {
     { email: 'trainer@digital4pulse.edu', role: 'Trainer' }
   ];
 
+  const handleUseDemoAccount = (accountEmail: string) => {
+    setEmail(accountEmail);
+    setPassword('password123');
+  };
+
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-6 animate-fade-in">
@@ -116,7 +121,7 @@ const LoginForm = () => {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold text-gray-800">Demo Accounts</CardTitle>
             <CardDescription className="text-xs text-gray-600">
-              Click on any email below to auto-fill, then use password: password123
+              Click "Use" to auto-fill both email and password fields
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
@@ -130,7 +135,7 @@ const LoginForm = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEmail(account.email)}
+                    onClick={() => handleUseDemoAccount(account.email)}
                     className="demo-account-button"
                   >
                     Use
