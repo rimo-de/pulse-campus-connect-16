@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,9 +27,15 @@ import {
   BookOpenCheck,
   TrendingUp,
   FileText,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronRight,
+  HardDrive,
+  FileImage,
+  Folder
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface AdminSidebarProps {
   activeSection: string;
@@ -38,15 +44,26 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
   const { user } = useAuth();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard']);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupId) 
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
 
   const navigationGroups = [
     {
-      label: "Overview",
+      id: "dashboard",
+      label: "Dashboard",
       items: [
         { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
       ]
     },
     {
+      id: "administration",
       label: "Administration",
       items: [
         { id: "system-settings", title: "System Settings", icon: Settings },
@@ -54,6 +71,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "students",
       label: "Students",
       items: [
         { id: "add-student", title: "Add Student", icon: UserPlus },
@@ -62,6 +80,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "trainers",
       label: "Trainers",
       items: [
         { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
@@ -69,6 +88,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "courses",
       label: "Courses",
       items: [
         { id: "create-course", title: "Create Course", icon: PlusCircle },
@@ -76,6 +96,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "reporting",
       label: "Reporting",
       items: [
         { id: "analytics", title: "Analytics", icon: BarChart3 },
@@ -84,10 +105,20 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "events",
       label: "Events",
       items: [
         { id: "schedule-events", title: "Schedule Events", icon: Calendar },
         { id: "calendar-view", title: "Calendar View", icon: Clock },
+      ]
+    },
+    {
+      id: "assets",
+      label: "Assets",
+      items: [
+        { id: "manage-assets", title: "Manage Assets", icon: HardDrive },
+        { id: "media-library", title: "Media Library", icon: FileImage },
+        { id: "file-storage", title: "File Storage", icon: Folder },
       ]
     }
   ];
@@ -107,29 +138,45 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        {navigationGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-2 py-1">
-              {group.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => onSectionChange(item.id)}
-                      isActive={activeSection === item.id}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {navigationGroups.map((group) => {
+          const isExpanded = expandedGroups.includes(group.id);
+          const hasActiveItem = group.items.some(item => item.id === activeSection);
+          
+          return (
+            <SidebarGroup key={group.id}>
+              <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(group.id)}>
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-2 py-2 hover:text-gray-700 cursor-pointer flex items-center justify-between group">
+                    <span>{group.label}</span>
+                    {isExpanded ? (
+                      <ChevronDown className="w-3 h-3 transition-transform" />
+                    ) : (
+                      <ChevronRight className="w-3 h-3 transition-transform" />
+                    )}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1">
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => (
+                        <SidebarMenuItem key={item.id}>
+                          <SidebarMenuButton
+                            onClick={() => onSectionChange(item.id)}
+                            isActive={activeSection === item.id}
+                            className="w-full justify-start"
+                          >
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.title}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-gray-200">
