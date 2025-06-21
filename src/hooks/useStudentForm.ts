@@ -64,10 +64,10 @@ export const useStudentForm = ({ student, onSuccess }: UseStudentFormProps) => {
           return;
         }
       } else {
-        // Create new student
+        // Create new student - remove the type casting that was causing the error
         const { error } = await supabase
           .from('students')
-          .insert(data as Tables<'students'>['Insert']);
+          .insert(data);
 
         if (error) {
           console.error('Error creating student:', error);
