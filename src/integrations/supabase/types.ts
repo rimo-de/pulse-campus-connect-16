@@ -19,6 +19,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           massnahmenummer: string | null
+          unit_fee: number | null
           units: number | null
           updated_at: string
         }
@@ -31,6 +32,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           massnahmenummer?: string | null
+          unit_fee?: number | null
           units?: number | null
           updated_at?: string
         }
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           massnahmenummer?: string | null
+          unit_fee?: number | null
           units?: number | null
           updated_at?: string
         }

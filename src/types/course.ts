@@ -28,6 +28,7 @@ export interface CourseOffering {
   massnahmenummer?: string | null;
   duration_days: number;
   units: number;
+  unit_fee: number;
   fee: number;
   is_active: boolean;
   created_at: string;
@@ -50,6 +51,7 @@ export interface CourseOfferingFormData {
   delivery_mode_id: string;
   massnahmenummer: string;
   duration_days: number;
+  unit_fee: number;
   fee: number;
   is_active: boolean;
 }

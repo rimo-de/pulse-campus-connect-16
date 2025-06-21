@@ -54,6 +54,7 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
             delivery_mode_id: offering.delivery_mode_id,
             massnahmenummer: offering.massnahmenummer || '',
             duration_days: offering.duration_days,
+            unit_fee: offering.unit_fee || 0,
             fee: offering.fee,
             is_active: offering.is_active,
           })) || [],
@@ -90,8 +91,12 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
         return { isValid: false, message: `Valid duration is required for offering ${i + 1}` };
       }
       
+      if (typeof offering.unit_fee !== 'number' || offering.unit_fee <= 0) {
+        return { isValid: false, message: `Unit fee must be greater than 0 for offering ${i + 1}` };
+      }
+
       if (typeof offering.fee !== 'number' || offering.fee < 0) {
-        return { isValid: false, message: `Valid fee is required for offering ${i + 1}` };
+        return { isValid: false, message: `Valid course fee is required for offering ${i + 1}` };
       }
     }
 

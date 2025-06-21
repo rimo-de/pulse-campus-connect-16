@@ -77,8 +77,12 @@ export const useCourseForm = (onSuccess?: () => void) => {
           throw new Error(`Duration must be greater than 0 for offering ${i + 1}`);
         }
         
+        if (typeof offering.unit_fee !== 'number' || offering.unit_fee <= 0) {
+          throw new Error(`Unit fee must be greater than 0 for offering ${i + 1}`);
+        }
+
         if (typeof offering.fee !== 'number' || offering.fee < 0) {
-          throw new Error(`Fee must be a valid positive number for offering ${i + 1}`);
+          throw new Error(`Course fee must be a valid positive number for offering ${i + 1}`);
         }
       }
 

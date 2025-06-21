@@ -23,6 +23,7 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
       delivery_mode_id: '',
       massnahmenummer: '',
       duration_days: 30,
+      unit_fee: 0,
       fee: 0,
       is_active: true,
     };
@@ -35,9 +36,21 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
   };
 
   const updateOffering = (index: number, field: keyof CourseOfferingFormData, value: any) => {
-    const updatedOfferings = formData.offerings.map((offering, i) => 
-      i === index ? { ...offering, [field]: value } : offering
-    );
+    const updatedOfferings = formData.offerings.map((offering, i) => {
+      if (i === index) {
+        const updatedOffering = { ...offering, [field]: value };
+        
+        // Auto-calculate course fee when duration_days or unit_fee changes
+        if (field === 'duration_days' || field === 'unit_fee') {
+          const units = field === 'duration_days' ? value * 8 : offering.duration_days * 8;
+          const unitFee = field === 'unit_fee' ? value : offering.unit_fee;
+          updatedOffering.fee = units * unitFee;
+        }
+        
+        return updatedOffering;
+      }
+      return offering;
+    });
     onFieldChange('offerings', updatedOfferings);
   };
 
@@ -50,13 +63,18 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
     if (selectedMode) {
       console.log('Auto-filling with mode defaults:', selectedMode);
       
+      // Calculate unit fee from delivery mode
+      const unitFee = selectedMode.default_units > 0 ? selectedMode.base_fee / selectedMode.default_units : 0;
+      const calculatedFee = selectedMode.default_duration_days * 8 * unitFee;
+      
       // Update all fields at once to prevent state conflicts
       const updatedOfferings = formData.offerings.map((offering, i) => 
         i === index ? {
           ...offering,
           delivery_mode_id: deliveryModeId,
           duration_days: selectedMode.default_duration_days,
-          fee: selectedMode.base_fee,
+          unit_fee: unitFee,
+          fee: calculatedFee,
         } : offering
       );
       
@@ -103,7 +121,7 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                     </Button>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Delivery Mode *</Label>
                       <Select
@@ -169,18 +187,30 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Fee (€) *</Label>
+                      <Label>Unit Fee (€) *</Label>
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
-                        value={offering.fee}
-                        onChange={(e) => updateOffering(index, 'fee', parseFloat(e.target.value) || 0)}
+                        value={offering.unit_fee}
+                        onChange={(e) => updateOffering(index, 'unit_fee', parseFloat(e.target.value) || 0)}
                         className="bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
-                      {(typeof offering.fee !== 'number' || offering.fee < 0) && (
-                        <p className="text-red-500 text-xs">Fee must be a valid positive number</p>
+                      {(typeof offering.unit_fee !== 'number' || offering.unit_fee <= 0) && (
+                        <p className="text-red-500 text-xs">Unit fee must be greater than 0</p>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Course Fee (€) - Calculated</Label>
+                      <Input
+                        value={offering.fee.toFixed(2)}
+                        readOnly
+                        className="bg-gray-50 border border-gray-300"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Calculated as: {calculatedUnits} units × €{offering.unit_fee} = €{offering.fee.toFixed(2)}
+                      </p>
                     </div>
 
                     <div className="flex items-center space-x-2 mt-6">
@@ -202,7 +232,7 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                         </span>
                         <br />
                         <span className="text-blue-600">
-                          Default: {selectedMode.default_duration_days} days • €{selectedMode.base_fee}
+                          Default: {selectedMode.default_duration_days} days • €{selectedMode.base_fee} total
                         </span>
                       </div>
                     </div>
