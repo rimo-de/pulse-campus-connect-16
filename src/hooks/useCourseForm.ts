@@ -52,34 +52,46 @@ export const useCourseForm = (onSuccess?: () => void) => {
 
   const submitForm = async (courseId?: string) => {
     setIsLoading(true);
+    
     try {
       console.log('Submitting form with data:', formData);
       
-      // Validate that we have at least one offering
+      // Enhanced validation
+      if (!formData.course_title.trim()) {
+        throw new Error('Course title is required');
+      }
+
       if (!formData.offerings || formData.offerings.length === 0) {
         throw new Error('At least one course offering is required');
       }
 
-      // Validate each offering
-      for (const offering of formData.offerings) {
+      // Validate each offering thoroughly
+      for (let i = 0; i < formData.offerings.length; i++) {
+        const offering = formData.offerings[i];
+        
         if (!offering.delivery_mode_id) {
-          throw new Error('Delivery mode is required for all offerings');
+          throw new Error(`Delivery mode is required for offering ${i + 1}`);
         }
+        
         if (!offering.duration_days || offering.duration_days <= 0) {
-          throw new Error('Duration must be greater than 0 for all offerings');
+          throw new Error(`Duration must be greater than 0 for offering ${i + 1}`);
         }
+        
         if (typeof offering.fee !== 'number' || offering.fee < 0) {
-          throw new Error('Fee must be a valid positive number for all offerings');
+          throw new Error(`Fee must be a valid positive number for offering ${i + 1}`);
         }
       }
 
+      // Submit the form
       if (courseId) {
+        console.log('Updating course:', courseId);
         await courseService.updateCourse(courseId, formData);
         toast({
           title: "Success",
           description: "Course updated successfully",
         });
       } else {
+        console.log('Creating new course');
         await courseService.createCourse(formData);
         toast({
           title: "Success",
@@ -89,11 +101,14 @@ export const useCourseForm = (onSuccess?: () => void) => {
       
       resetForm();
       onSuccess?.();
+      
     } catch (error) {
       console.error('Error submitting form:', error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

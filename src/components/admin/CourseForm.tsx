@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCourseForm } from '@/hooks/useCourseForm';
+import { useToast } from '@/hooks/use-toast';
 import type { CourseWithOfferings } from '@/types/course';
 import CourseFormHeader from './course-form/CourseFormHeader';
 import CourseBasicFields from './course-form/CourseBasicFields';
@@ -17,6 +18,7 @@ interface CourseFormProps {
 }
 
 const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormProps) => {
+  const { toast } = useToast();
   const { 
     formData, 
     handleInputChange, 
@@ -64,22 +66,30 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
   }, [isOpen, editingCourse, setFormData, resetForm]);
 
   const validateForm = () => {
+    console.log('Validating form with data:', formData);
+    
+    // Check course title
     if (!formData.course_title.trim()) {
       return { isValid: false, message: "Course title is required" };
     }
 
+    // Check offerings
     if (formData.offerings.length === 0) {
       return { isValid: false, message: "At least one course offering is required" };
     }
 
+    // Validate each offering
     for (let i = 0; i < formData.offerings.length; i++) {
       const offering = formData.offerings[i];
+      
       if (!offering.delivery_mode_id) {
         return { isValid: false, message: `Delivery mode is required for offering ${i + 1}` };
       }
+      
       if (!offering.duration_days || offering.duration_days <= 0) {
         return { isValid: false, message: `Valid duration is required for offering ${i + 1}` };
       }
+      
       if (typeof offering.fee !== 'number' || offering.fee < 0) {
         return { isValid: false, message: `Valid fee is required for offering ${i + 1}` };
       }
@@ -91,14 +101,20 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started');
+    
     const validation = validateForm();
     if (!validation.isValid) {
       console.error('Form validation failed:', validation.message);
-      // You could show a toast here if needed
+      toast({
+        title: "Validation Error",
+        description: validation.message,
+        variant: "destructive",
+      });
       return;
     }
 
-    console.log('Form submitted with data:', formData);
+    console.log('Form validation passed, submitting...');
     submitForm(editingCourse?.id);
   };
 

@@ -41,6 +41,32 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
     onFieldChange('offerings', updatedOfferings);
   };
 
+  const handleDeliveryModeChange = (index: number, deliveryModeId: string) => {
+    console.log('Delivery mode selected:', deliveryModeId);
+    
+    // Find the selected delivery mode
+    const selectedMode = deliveryModes.find(m => m.id === deliveryModeId);
+    
+    if (selectedMode) {
+      console.log('Auto-filling with mode defaults:', selectedMode);
+      
+      // Update all fields at once to prevent state conflicts
+      const updatedOfferings = formData.offerings.map((offering, i) => 
+        i === index ? {
+          ...offering,
+          delivery_mode_id: deliveryModeId,
+          duration_days: selectedMode.default_duration_days,
+          fee: selectedMode.base_fee,
+        } : offering
+      );
+      
+      onFieldChange('offerings', updatedOfferings);
+    } else {
+      // Just update the delivery mode if no matching mode found
+      updateOffering(index, 'delivery_mode_id', deliveryModeId);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -78,71 +104,71 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label>Delivery Mode *</Label>
                       <Select
                         value={offering.delivery_mode_id}
-                        onValueChange={(value) => {
-                          console.log('Delivery mode selected:', value);
-                          updateOffering(index, 'delivery_mode_id', value);
-                          // Auto-fill defaults when delivery mode is selected
-                          const mode = deliveryModes.find(m => m.id === value);
-                          if (mode) {
-                            console.log('Auto-filling with mode defaults:', mode);
-                            updateOffering(index, 'duration_days', mode.default_duration_days);
-                            updateOffering(index, 'fee', mode.base_fee);
-                          }
-                        }}
+                        onValueChange={(value) => handleDeliveryModeChange(index, value)}
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="w-full bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                           <SelectValue placeholder="Select delivery mode" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border shadow-lg z-50">
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-50 max-h-60 overflow-y-auto">
                           {deliveryModes.length === 0 ? (
-                            <div className="p-2 text-gray-500 text-sm">Loading delivery modes...</div>
+                            <div className="p-3 text-gray-500 text-sm">Loading delivery modes...</div>
                           ) : (
                             deliveryModes.map((mode) => (
-                              <SelectItem key={mode.id} value={mode.id}>
+                              <SelectItem 
+                                key={mode.id} 
+                                value={mode.id}
+                                className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
+                              >
                                 {mode.name}
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
+                      {!offering.delivery_mode_id && (
+                        <p className="text-red-500 text-xs">Delivery mode is required</p>
+                      )}
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label>Maßnahmenummer</Label>
                       <Input
                         value={offering.massnahmenummer}
                         onChange={(e) => updateOffering(index, 'massnahmenummer', e.target.value)}
-                        className="mt-1"
                         placeholder="Enter Maßnahmenummer"
+                        className="bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label>Duration (Days) *</Label>
                       <Input
                         type="number"
                         min="1"
                         value={offering.duration_days}
                         onChange={(e) => updateOffering(index, 'duration_days', parseInt(e.target.value) || 0)}
-                        className="mt-1"
                         required
+                        className="bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
+                      {(!offering.duration_days || offering.duration_days <= 0) && (
+                        <p className="text-red-500 text-xs">Duration must be greater than 0</p>
+                      )}
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label>Units (Read Only)</Label>
                       <Input
                         value={calculatedUnits}
                         readOnly
-                        className="mt-1 bg-gray-50"
+                        className="bg-gray-50 border border-gray-300"
                       />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label>Fee (€) *</Label>
                       <Input
                         type="number"
@@ -150,8 +176,11 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                         step="0.01"
                         value={offering.fee}
                         onChange={(e) => updateOffering(index, 'fee', parseFloat(e.target.value) || 0)}
-                        className="mt-1"
+                        className="bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
+                      {(typeof offering.fee !== 'number' || offering.fee < 0) && (
+                        <p className="text-red-500 text-xs">Fee must be a valid positive number</p>
+                      )}
                     </div>
 
                     <div className="flex items-center space-x-2 mt-6">
@@ -164,8 +193,18 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                   </div>
 
                   {selectedMode && (
-                    <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-700">
-                      <strong>{selectedMode.name}</strong> - {selectedMode.delivery_method}, {selectedMode.delivery_type}
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-sm text-blue-800">
+                        <strong>{selectedMode.name}</strong>
+                        <br />
+                        <span className="text-blue-600">
+                          {selectedMode.delivery_method} • {selectedMode.delivery_type}
+                        </span>
+                        <br />
+                        <span className="text-blue-600">
+                          Default: {selectedMode.default_duration_days} days • €{selectedMode.base_fee}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </CardContent>
