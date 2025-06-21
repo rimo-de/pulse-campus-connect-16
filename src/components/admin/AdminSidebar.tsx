@@ -69,6 +69,14 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "courses",
+      label: "Courses",
+      items: [
+        { id: "create-course", title: "Create Course", icon: PlusCircle },
+        { id: "manage-courses", title: "Manage Courses", icon: BookOpen },
+      ]
+    },
+    {
       id: "administration",
       label: "Administration",
       items: [
@@ -82,14 +90,6 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
         { id: "trainer-assignments", title: "Assignments", icon: Users },
-      ]
-    },
-    {
-      id: "courses",
-      label: "Courses",
-      items: [
-        { id: "create-course", title: "Create Course", icon: PlusCircle },
-        { id: "manage-courses", title: "Manage Courses", icon: BookOpen },
       ]
     },
     {

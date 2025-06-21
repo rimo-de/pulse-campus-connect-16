@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   Settings
 } from 'lucide-react';
 import StudentManagement from './StudentManagement';
+import CourseManagement from './CourseManagement';
 
 interface AdminContentProps {
   activeSection: string;
@@ -137,6 +137,9 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return renderDashboard();
     case 'maintain-students':
       return <StudentManagement />;
+    case 'create-course':
+    case 'manage-courses':
+      return <CourseManagement />;
     case 'add-student':
       return renderPlaceholderContent('Add Student', 'Register new students to the system', UserPlus);
     case 'view-students':
@@ -147,10 +150,6 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return renderPlaceholderContent('Manage Trainers', 'Add and manage trainer accounts', GraduationCap);
     case 'trainer-assignments':
       return renderPlaceholderContent('Trainer Assignments', 'Assign trainers to courses and students', Users);
-    case 'create-course':
-      return renderPlaceholderContent('Create Course', 'Set up new courses and curricula', BookOpen);
-    case 'manage-courses':
-      return renderPlaceholderContent('Manage Courses', 'Edit and organize existing courses', BookOpen);
     case 'analytics':
       return renderPlaceholderContent('Analytics', 'View detailed analytics and insights', BarChart3);
     case 'completion-rates':

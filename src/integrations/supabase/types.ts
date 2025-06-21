@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      courses: {
+        Row: {
+          course_description: string | null
+          course_title: string
+          created_at: string
+          curriculum_file_name: string | null
+          curriculum_file_path: string | null
+          delivery_mode: string | null
+          delivery_type: string | null
+          id: string
+          massnahmenummer: string | null
+          number_of_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          course_description?: string | null
+          course_title: string
+          created_at?: string
+          curriculum_file_name?: string | null
+          curriculum_file_path?: string | null
+          delivery_mode?: string | null
+          delivery_type?: string | null
+          id?: string
+          massnahmenummer?: string | null
+          number_of_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          course_description?: string | null
+          course_title?: string
+          created_at?: string
+          curriculum_file_name?: string | null
+          curriculum_file_path?: string | null
+          delivery_mode?: string | null
+          delivery_type?: string | null
+          id?: string
+          massnahmenummer?: string | null
+          number_of_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_addresses: {
         Row: {
           city: string
