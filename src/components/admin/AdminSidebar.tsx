@@ -28,8 +28,7 @@ import {
   TrendingUp,
   FileText,
   Clock,
-  ChevronDown,
-  ChevronRight,
+  Plus,
   HardDrive,
   FileImage,
   Folder
@@ -63,20 +62,18 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       ]
     },
     {
+      id: "students",
+      label: "Students",
+      items: [
+        { id: "maintain-students", title: "Maintain Students", icon: Users },
+      ]
+    },
+    {
       id: "administration",
       label: "Administration",
       items: [
         { id: "system-settings", title: "System Settings", icon: Settings },
         { id: "user-management", title: "User Management", icon: Users },
-      ]
-    },
-    {
-      id: "students",
-      label: "Students",
-      items: [
-        { id: "add-student", title: "Add Student", icon: UserPlus },
-        { id: "view-students", title: "View Students", icon: UserCheck },
-        { id: "enrollments", title: "Enrollments", icon: BookOpenCheck },
       ]
     },
     {
@@ -148,11 +145,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
                 <CollapsibleTrigger asChild>
                   <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-2 py-2 hover:text-gray-700 cursor-pointer flex items-center justify-between group">
                     <span>{group.label}</span>
-                    {isExpanded ? (
-                      <ChevronDown className="w-3 h-3 transition-transform" />
-                    ) : (
-                      <ChevronRight className="w-3 h-3 transition-transform" />
-                    )}
+                    <Plus className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-45' : ''}`} />
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-1">

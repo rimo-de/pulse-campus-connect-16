@@ -12,6 +12,7 @@ import {
   BarChart3,
   Settings
 } from 'lucide-react';
+import StudentManagement from './StudentManagement';
 
 interface AdminContentProps {
   activeSection: string;
@@ -134,6 +135,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
   switch (activeSection) {
     case 'dashboard':
       return renderDashboard();
+    case 'maintain-students':
+      return <StudentManagement />;
     case 'add-student':
       return renderPlaceholderContent('Add Student', 'Register new students to the system', UserPlus);
     case 'view-students':
