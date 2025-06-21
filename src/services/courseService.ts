@@ -1,12 +1,18 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Course, CourseFormData } from '@/types/course';
+import type { Course, CourseFormData, DeliveryMode, CourseOffering, CourseWithOfferings } from '@/types/course';
 
 export const courseService = {
-  async getAllCourses(): Promise<Course[]> {
+  async getAllCourses(): Promise<CourseWithOfferings[]> {
     const { data, error } = await supabase
       .from('courses')
-      .select('*')
+      .select(`
+        *,
+        course_offerings (
+          *,
+          delivery_mode:delivery_modes (*)
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -17,10 +23,16 @@ export const courseService = {
     return data || [];
   },
 
-  async getCourse(id: string): Promise<Course | null> {
+  async getCourse(id: string): Promise<CourseWithOfferings | null> {
     const { data, error } = await supabase
       .from('courses')
-      .select('*')
+      .select(`
+        *,
+        course_offerings (
+          *,
+          delivery_mode:delivery_modes (*)
+        )
+      `)
       .eq('id', id)
       .maybeSingle();
 
@@ -30,6 +42,20 @@ export const courseService = {
     }
 
     return data;
+  },
+
+  async getDeliveryModes(): Promise<DeliveryMode[]> {
+    const { data, error } = await supabase
+      .from('delivery_modes')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching delivery modes:', error);
+      throw new Error('Failed to fetch delivery modes');
+    }
+
+    return data || [];
   },
 
   async createCourse(courseData: CourseFormData): Promise<Course> {
@@ -54,37 +80,51 @@ export const courseService = {
       curriculum_file_path = fileName;
     }
 
-    const { data, error } = await supabase
+    // Create the course
+    const { data: course, error: courseError } = await supabase
       .from('courses')
       .insert({
         course_title: courseData.course_title,
         course_description: courseData.course_description,
-        massnahmenummer: courseData.massnahmenummer,
-        number_of_days: courseData.number_of_days,
-        delivery_mode: courseData.delivery_mode,
-        delivery_type: courseData.delivery_type,
         curriculum_file_name,
         curriculum_file_path,
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating course:', error);
+    if (courseError) {
+      console.error('Error creating course:', courseError);
       throw new Error('Failed to create course');
     }
 
-    return data;
+    // Create course offerings
+    if (courseData.offerings && courseData.offerings.length > 0) {
+      const offerings = courseData.offerings.map(offering => ({
+        course_id: course.id,
+        delivery_mode_id: offering.delivery_mode_id,
+        massnahmenummer: offering.massnahmenummer,
+        duration_days: offering.duration_days,
+        fee: offering.fee,
+        is_active: offering.is_active,
+      }));
+
+      const { error: offeringsError } = await supabase
+        .from('course_offerings')
+        .insert(offerings);
+
+      if (offeringsError) {
+        console.error('Error creating course offerings:', offeringsError);
+        throw new Error('Failed to create course offerings');
+      }
+    }
+
+    return course;
   },
 
   async updateCourse(id: string, courseData: Partial<CourseFormData>): Promise<Course> {
     let updateData: any = {
       course_title: courseData.course_title,
       course_description: courseData.course_description,
-      massnahmenummer: courseData.massnahmenummer,
-      number_of_days: courseData.number_of_days,
-      delivery_mode: courseData.delivery_mode,
-      delivery_type: courseData.delivery_type,
     };
 
     // Upload new curriculum file if provided
@@ -115,6 +155,36 @@ export const courseService = {
     if (error) {
       console.error('Error updating course:', error);
       throw new Error('Failed to update course');
+    }
+
+    // Update course offerings if provided
+    if (courseData.offerings) {
+      // Delete existing offerings
+      await supabase
+        .from('course_offerings')
+        .delete()
+        .eq('course_id', id);
+
+      // Insert new offerings
+      if (courseData.offerings.length > 0) {
+        const offerings = courseData.offerings.map(offering => ({
+          course_id: id,
+          delivery_mode_id: offering.delivery_mode_id,
+          massnahmenummer: offering.massnahmenummer,
+          duration_days: offering.duration_days,
+          fee: offering.fee,
+          is_active: offering.is_active,
+        }));
+
+        const { error: offeringsError } = await supabase
+          .from('course_offerings')
+          .insert(offerings);
+
+        if (offeringsError) {
+          console.error('Error updating course offerings:', offeringsError);
+          throw new Error('Failed to update course offerings');
+        }
+      }
     }
 
     return data;

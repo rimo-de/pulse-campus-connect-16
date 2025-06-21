@@ -2,21 +2,28 @@
 import { useState, useCallback } from 'react';
 import { courseService } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
-import type { CourseFormData } from '@/types/course';
+import type { CourseFormData, DeliveryMode } from '@/types/course';
 
 export const useCourseForm = (onSuccess?: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [deliveryModes, setDeliveryModes] = useState<DeliveryMode[]>([]);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<CourseFormData>({
     course_title: '',
     course_description: '',
-    massnahmenummer: '',
-    number_of_days: 0,
-    delivery_mode: 'Online',
-    delivery_type: 'Full time',
     curriculum_file: null,
+    offerings: [],
   });
+
+  const loadDeliveryModes = useCallback(async () => {
+    try {
+      const modes = await courseService.getDeliveryModes();
+      setDeliveryModes(modes);
+    } catch (error) {
+      console.error('Error loading delivery modes:', error);
+    }
+  }, []);
 
   const handleInputChange = useCallback((field: keyof CourseFormData, value: any) => {
     console.log('Input change:', field, value);
@@ -31,11 +38,8 @@ export const useCourseForm = (onSuccess?: () => void) => {
     setFormData({
       course_title: '',
       course_description: '',
-      massnahmenummer: '',
-      number_of_days: 0,
-      delivery_mode: 'Online',
-      delivery_type: 'Full time',
       curriculum_file: null,
+      offerings: [],
     });
   }, []);
 
@@ -81,5 +85,7 @@ export const useCourseForm = (onSuccess?: () => void) => {
     resetForm,
     submitForm,
     isLoading,
+    deliveryModes,
+    loadDeliveryModes,
   };
 };

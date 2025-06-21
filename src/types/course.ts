@@ -3,22 +3,53 @@ export interface Course {
   id: string;
   course_title: string;
   course_description?: string | null;
-  massnahmenummer?: string | null;
-  number_of_days?: number | null;
-  delivery_mode?: string | null;
-  delivery_type?: string | null;
   curriculum_file_name?: string | null;
   curriculum_file_path?: string | null;
   created_at: string;
   updated_at: string;
 }
 
+export interface DeliveryMode {
+  id: string;
+  name: string;
+  delivery_method: 'Online' | 'Remote';
+  delivery_type: 'Full time' | 'Part time';
+  default_duration_days: number;
+  default_units: number;
+  base_fee: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseOffering {
+  id: string;
+  course_id: string;
+  delivery_mode_id: string;
+  massnahmenummer?: string | null;
+  duration_days: number;
+  units: number;
+  fee: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  delivery_mode?: DeliveryMode;
+}
+
+export interface CourseWithOfferings extends Course {
+  course_offerings: CourseOffering[];
+}
+
 export interface CourseFormData {
   course_title: string;
   course_description: string;
-  massnahmenummer: string;
-  number_of_days: number;
-  delivery_mode: 'Online' | 'Remote';
-  delivery_type: 'Full time' | 'Part time';
   curriculum_file: File | null;
+  offerings: CourseOfferingFormData[];
+}
+
+export interface CourseOfferingFormData {
+  delivery_mode_id: string;
+  massnahmenummer: string;
+  duration_days: number;
+  fee: number;
+  is_active: boolean;
 }

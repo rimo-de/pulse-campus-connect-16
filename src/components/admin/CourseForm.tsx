@@ -2,11 +2,10 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCourseForm } from '@/hooks/useCourseForm';
-import type { Course } from '@/types/course';
+import type { CourseWithOfferings } from '@/types/course';
 import CourseFormHeader from './course-form/CourseFormHeader';
 import CourseBasicFields from './course-form/CourseBasicFields';
-import CourseDurationFields from './course-form/CourseDurationFields';
-import CourseDeliveryFields from './course-form/CourseDeliveryFields';
+import CourseOfferingsFields from './course-form/CourseOfferingsFields';
 import CourseFileUpload from './course-form/CourseFileUpload';
 import CourseFormActions from './course-form/CourseFormActions';
 
@@ -14,23 +13,29 @@ interface CourseFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  editingCourse?: Course | null;
+  editingCourse?: CourseWithOfferings | null;
 }
 
 const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormProps) => {
-  const { formData, handleInputChange, submitForm, resetForm, isLoading, setFormData } = useCourseForm(() => {
+  const { 
+    formData, 
+    handleInputChange, 
+    submitForm, 
+    resetForm, 
+    isLoading, 
+    setFormData,
+    deliveryModes,
+    loadDeliveryModes
+  } = useCourseForm(() => {
     onSuccess();
     onClose();
   });
 
-  // Helper functions to validate and provide fallbacks for literal types
-  const validateDeliveryMode = (value: string | null): 'Online' | 'Remote' => {
-    return value === 'Online' || value === 'Remote' ? value : 'Online';
-  };
-
-  const validateDeliveryType = (value: string | null): 'Full time' | 'Part time' => {
-    return value === 'Full time' || value === 'Part time' ? value : 'Full time';
-  };
+  useEffect(() => {
+    if (isOpen) {
+      loadDeliveryModes();
+    }
+  }, [isOpen, loadDeliveryModes]);
 
   useEffect(() => {
     console.log('CourseForm useEffect triggered - isOpen:', isOpen, 'editingCourse:', editingCourse?.id);
@@ -41,11 +46,14 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
         setFormData({
           course_title: editingCourse.course_title,
           course_description: editingCourse.course_description || '',
-          massnahmenummer: editingCourse.massnahmenummer || '',
-          number_of_days: editingCourse.number_of_days || 0,
-          delivery_mode: validateDeliveryMode(editingCourse.delivery_mode),
-          delivery_type: validateDeliveryType(editingCourse.delivery_type),
           curriculum_file: null,
+          offerings: editingCourse.course_offerings?.map(offering => ({
+            delivery_mode_id: offering.delivery_mode_id,
+            massnahmenummer: offering.massnahmenummer || '',
+            duration_days: offering.duration_days,
+            fee: offering.fee,
+            is_active: offering.is_active,
+          })) || [],
         });
       } else {
         console.log('Resetting form for new course');
@@ -64,7 +72,7 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <Card className="border-0 shadow-none">
           <CourseFormHeader editingCourse={editingCourse} onClose={onClose} />
           
@@ -75,13 +83,9 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
                 onFieldChange={handleInputChange}
               />
               
-              <CourseDurationFields
+              <CourseOfferingsFields
                 formData={formData}
-                onFieldChange={handleInputChange}
-              />
-              
-              <CourseDeliveryFields
-                formData={formData}
+                deliveryModes={deliveryModes}
                 onFieldChange={handleInputChange}
               />
               

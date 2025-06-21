@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      course_offerings: {
+        Row: {
+          course_id: string
+          created_at: string
+          delivery_mode_id: string
+          duration_days: number
+          fee: number | null
+          id: string
+          is_active: boolean | null
+          massnahmenummer: string | null
+          units: number | null
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          delivery_mode_id: string
+          duration_days: number
+          fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          massnahmenummer?: string | null
+          units?: number | null
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          delivery_mode_id?: string
+          duration_days?: number
+          fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          massnahmenummer?: string | null
+          units?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_offerings_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_offerings_delivery_mode_id_fkey"
+            columns: ["delivery_mode_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_modes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           course_description: string | null
@@ -16,11 +70,7 @@ export type Database = {
           created_at: string
           curriculum_file_name: string | null
           curriculum_file_path: string | null
-          delivery_mode: string | null
-          delivery_type: string | null
           id: string
-          massnahmenummer: string | null
-          number_of_days: number | null
           updated_at: string
         }
         Insert: {
@@ -29,11 +79,7 @@ export type Database = {
           created_at?: string
           curriculum_file_name?: string | null
           curriculum_file_path?: string | null
-          delivery_mode?: string | null
-          delivery_type?: string | null
           id?: string
-          massnahmenummer?: string | null
-          number_of_days?: number | null
           updated_at?: string
         }
         Update: {
@@ -42,11 +88,43 @@ export type Database = {
           created_at?: string
           curriculum_file_name?: string | null
           curriculum_file_path?: string | null
-          delivery_mode?: string | null
-          delivery_type?: string | null
           id?: string
-          massnahmenummer?: string | null
-          number_of_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_modes: {
+        Row: {
+          base_fee: number | null
+          created_at: string
+          default_duration_days: number
+          default_units: number | null
+          delivery_method: string
+          delivery_type: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_fee?: number | null
+          created_at?: string
+          default_duration_days?: number
+          default_units?: number | null
+          delivery_method: string
+          delivery_type: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_fee?: number | null
+          created_at?: string
+          default_duration_days?: number
+          default_units?: number | null
+          delivery_method?: string
+          delivery_type?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
