@@ -47,7 +47,6 @@ export const courseService = {
   async getDeliveryModes(): Promise<DeliveryMode[]> {
     console.log('Fetching delivery modes from database...');
     
-    // Calculate base unit fee from base_fee and default_units
     const { data, error } = await supabase
       .from('delivery_modes')
       .select('*')
@@ -58,7 +57,6 @@ export const courseService = {
       throw new Error('Failed to fetch delivery modes');
     }
 
-    // Add calculated unit_fee to each delivery mode
     const modesWithUnitFee = (data || []).map(mode => ({
       ...mode,
       unit_fee: mode.default_units > 0 ? mode.base_fee / mode.default_units : 0
@@ -121,7 +119,7 @@ export const courseService = {
         massnahmenummer: offering.massnahmenummer || null,
         duration_days: offering.duration_days,
         unit_fee: offering.unit_fee,
-        fee: offering.fee, // This should be calculated as units * unit_fee
+        fee: offering.fee,
         is_active: offering.is_active,
       }));
 
@@ -196,7 +194,7 @@ export const courseService = {
           massnahmenummer: offering.massnahmenummer || null,
           duration_days: offering.duration_days,
           unit_fee: offering.unit_fee,
-          fee: offering.fee, // This should be calculated as units * unit_fee
+          fee: offering.fee,
           is_active: offering.is_active,
         }));
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import StudentManagement from './StudentManagement';
 import CourseManagement from './CourseManagement';
+import CourseScheduleManagement from './CourseScheduleManagement';
 
 interface AdminContentProps {
   activeSection: string;
@@ -140,6 +142,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
     case 'create-course':
     case 'manage-courses':
       return <CourseManagement />;
+    case 'course-schedule':
+      return <CourseScheduleManagement />;
     case 'add-student':
       return renderPlaceholderContent('Add Student', 'Register new students to the system', UserPlus);
     case 'view-students':

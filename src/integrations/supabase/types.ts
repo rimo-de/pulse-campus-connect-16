@@ -66,6 +66,57 @@ export type Database = {
           },
         ]
       }
+      course_schedules: {
+        Row: {
+          course_id: string
+          course_offering_id: string
+          created_at: string
+          end_date: string
+          id: string
+          instructor_id: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          course_offering_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          instructor_id?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          course_offering_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          instructor_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_schedules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_schedules_course_offering_id_fkey"
+            columns: ["course_offering_id"]
+            isOneToOne: false
+            referencedRelation: "course_offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           course_description: string | null
