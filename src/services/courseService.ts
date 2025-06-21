@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Course, CourseFormData, DeliveryMode, CourseOffering, CourseWithOfferings } from '@/types/course';
 
@@ -20,7 +19,7 @@ export const courseService = {
       throw new Error('Failed to fetch courses');
     }
 
-    return data || [];
+    return (data || []) as CourseWithOfferings[];
   },
 
   async getCourse(id: string): Promise<CourseWithOfferings | null> {
@@ -41,7 +40,7 @@ export const courseService = {
       throw new Error('Failed to fetch course');
     }
 
-    return data;
+    return data as CourseWithOfferings | null;
   },
 
   async getDeliveryModes(): Promise<DeliveryMode[]> {
@@ -55,7 +54,7 @@ export const courseService = {
       throw new Error('Failed to fetch delivery modes');
     }
 
-    return data || [];
+    return (data || []) as DeliveryMode[];
   },
 
   async createCourse(courseData: CourseFormData): Promise<Course> {

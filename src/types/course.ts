@@ -12,8 +12,8 @@ export interface Course {
 export interface DeliveryMode {
   id: string;
   name: string;
-  delivery_method: 'Online' | 'Remote';
-  delivery_type: 'Full time' | 'Part time';
+  delivery_method: string; // Changed from literal union to string
+  delivery_type: string; // Changed from literal union to string
   default_duration_days: number;
   default_units: number;
   base_fee: number;
