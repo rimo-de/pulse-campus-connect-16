@@ -23,6 +23,15 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
     onClose();
   });
 
+  // Helper functions to validate and provide fallbacks for literal types
+  const validateDeliveryMode = (value: string | null): 'Online' | 'Remote' => {
+    return value === 'Online' || value === 'Remote' ? value : 'Online';
+  };
+
+  const validateDeliveryType = (value: string | null): 'Full time' | 'Part time' => {
+    return value === 'Full time' || value === 'Part time' ? value : 'Full time';
+  };
+
   useEffect(() => {
     if (editingCourse) {
       setFormData({
@@ -30,8 +39,8 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
         course_description: editingCourse.course_description || '',
         massnahmenummer: editingCourse.massnahmenummer || '',
         number_of_days: editingCourse.number_of_days || 0,
-        delivery_mode: editingCourse.delivery_mode || 'Online',
-        delivery_type: editingCourse.delivery_type || 'Full time',
+        delivery_mode: validateDeliveryMode(editingCourse.delivery_mode),
+        delivery_type: validateDeliveryType(editingCourse.delivery_type),
         curriculum_file: null,
       });
     } else {
