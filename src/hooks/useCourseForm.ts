@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { courseService } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
 import type { CourseFormData } from '@/types/course';
@@ -18,14 +18,16 @@ export const useCourseForm = (onSuccess?: () => void) => {
     curriculum_file: null,
   });
 
-  const handleInputChange = (field: keyof CourseFormData, value: any) => {
+  const handleInputChange = useCallback((field: keyof CourseFormData, value: any) => {
+    console.log('Input change:', field, value);
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
+    console.log('Resetting form');
     setFormData({
       course_title: '',
       course_description: '',
@@ -35,7 +37,7 @@ export const useCourseForm = (onSuccess?: () => void) => {
       delivery_type: 'Full time',
       curriculum_file: null,
     });
-  };
+  }, []);
 
   const submitForm = async (courseId?: string) => {
     setIsLoading(true);
@@ -67,9 +69,14 @@ export const useCourseForm = (onSuccess?: () => void) => {
     }
   };
 
+  const stableSetFormData = useCallback((newFormData: CourseFormData) => {
+    console.log('Setting form data:', newFormData);
+    setFormData(newFormData);
+  }, []);
+
   return {
     formData,
-    setFormData,
+    setFormData: stableSetFormData,
     handleInputChange,
     resetForm,
     submitForm,

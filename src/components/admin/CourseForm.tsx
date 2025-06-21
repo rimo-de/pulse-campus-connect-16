@@ -33,8 +33,11 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
   };
 
   useEffect(() => {
+    console.log('CourseForm useEffect triggered - isOpen:', isOpen, 'editingCourse:', editingCourse?.id);
+    
     if (isOpen) {
       if (editingCourse) {
+        console.log('Setting form data for editing course:', editingCourse.course_title);
         setFormData({
           course_title: editingCourse.course_title,
           course_description: editingCourse.course_description || '',
@@ -45,6 +48,7 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
           curriculum_file: null,
         });
       } else {
+        console.log('Resetting form for new course');
         resetForm();
       }
     }
@@ -52,6 +56,7 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
     submitForm(editingCourse?.id);
   };
 
