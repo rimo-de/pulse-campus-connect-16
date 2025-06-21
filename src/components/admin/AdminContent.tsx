@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,16 +15,41 @@ import {
 import StudentManagement from './StudentManagement';
 import CourseManagement from './CourseManagement';
 import CourseScheduleManagement from './CourseScheduleManagement';
+import { StudentService } from '@/services/studentService';
+import { courseService } from '@/services/courseService';
 
 interface AdminContentProps {
   activeSection: string;
 }
 
 const AdminContent = ({ activeSection }: AdminContentProps) => {
+  const [studentCount, setStudentCount] = useState(0);
+  const [courseCount, setCourseCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        // Fetch student count
+        const studentsResult = await StudentService.getAllStudents();
+        setStudentCount(studentsResult.data.length);
+
+        // Fetch course count
+        const coursesResult = await courseService.getAllCourses();
+        setCourseCount(coursesResult.length);
+      } catch (error) {
+        console.error('Error fetching counts:', error);
+      }
+    };
+
+    if (activeSection === 'dashboard') {
+      fetchCounts();
+    }
+  }, [activeSection]);
+
   const renderDashboard = () => {
     const stats = [
-      { title: 'Total Students', value: '1,247', icon: Users, change: '+12%' },
-      { title: 'Active Courses', value: '34', icon: BookOpen, change: '+3%' },
+      { title: 'Total Students', value: studentCount.toString(), icon: Users, change: '+12%' },
+      { title: 'Active Courses', value: courseCount.toString(), icon: BookOpen, change: '+3%' },
       { title: 'Trainers', value: '48', icon: GraduationCap, change: '+1%' },
       { title: 'Completion Rate', value: '89%', icon: TrendingUp, change: '+5%' }
     ];
@@ -140,7 +165,6 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
     case 'maintain-students':
       return <StudentManagement />;
     case 'create-course':
-    case 'manage-courses':
       return <CourseManagement />;
     case 'course-schedule':
       return <CourseScheduleManagement />;

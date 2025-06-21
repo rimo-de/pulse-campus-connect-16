@@ -73,7 +73,6 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       label: "Courses",
       items: [
         { id: "create-course", title: "Create Course", icon: PlusCircle },
-        { id: "manage-courses", title: "Manage Courses", icon: BookOpen },
         { id: "course-schedule", title: "Course Schedule", icon: Calendar },
       ]
     },
