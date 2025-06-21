@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Course, CourseFormData, DeliveryMode, CourseOffering, CourseWithOfferings } from '@/types/course';
 
@@ -44,6 +45,7 @@ export const courseService = {
   },
 
   async getDeliveryModes(): Promise<DeliveryMode[]> {
+    console.log('Fetching delivery modes from database...');
     const { data, error } = await supabase
       .from('delivery_modes')
       .select('*')
@@ -54,10 +56,13 @@ export const courseService = {
       throw new Error('Failed to fetch delivery modes');
     }
 
+    console.log('Raw delivery modes data:', data);
     return (data || []) as DeliveryMode[];
   },
 
   async createCourse(courseData: CourseFormData): Promise<Course> {
+    console.log('Creating course with data:', courseData);
+    
     let curriculum_file_name = null;
     let curriculum_file_path = null;
 
@@ -96,16 +101,22 @@ export const courseService = {
       throw new Error('Failed to create course');
     }
 
+    console.log('Course created successfully:', course);
+
     // Create course offerings
     if (courseData.offerings && courseData.offerings.length > 0) {
+      console.log('Creating course offerings:', courseData.offerings);
+      
       const offerings = courseData.offerings.map(offering => ({
         course_id: course.id,
         delivery_mode_id: offering.delivery_mode_id,
-        massnahmenummer: offering.massnahmenummer,
+        massnahmenummer: offering.massnahmenummer || null,
         duration_days: offering.duration_days,
         fee: offering.fee,
         is_active: offering.is_active,
       }));
+
+      console.log('Inserting offerings:', offerings);
 
       const { error: offeringsError } = await supabase
         .from('course_offerings')
@@ -113,8 +124,12 @@ export const courseService = {
 
       if (offeringsError) {
         console.error('Error creating course offerings:', offeringsError);
+        // If course offerings fail, we should delete the course to maintain consistency
+        await supabase.from('courses').delete().eq('id', course.id);
         throw new Error('Failed to create course offerings');
       }
+
+      console.log('Course offerings created successfully');
     }
 
     return course;
@@ -169,7 +184,7 @@ export const courseService = {
         const offerings = courseData.offerings.map(offering => ({
           course_id: id,
           delivery_mode_id: offering.delivery_mode_id,
-          massnahmenummer: offering.massnahmenummer,
+          massnahmenummer: offering.massnahmenummer || null,
           duration_days: offering.duration_days,
           fee: offering.fee,
           is_active: offering.is_active,

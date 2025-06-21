@@ -16,6 +16,8 @@ interface CourseOfferingsFieldsProps {
 }
 
 const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: CourseOfferingsFieldsProps) => {
+  console.log('CourseOfferingsFields rendered with deliveryModes:', deliveryModes);
+  
   const addOffering = () => {
     const newOffering: CourseOfferingFormData = {
       delivery_mode_id: '',
@@ -77,14 +79,16 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <Label>Delivery Mode</Label>
+                      <Label>Delivery Mode *</Label>
                       <Select
                         value={offering.delivery_mode_id}
                         onValueChange={(value) => {
+                          console.log('Delivery mode selected:', value);
                           updateOffering(index, 'delivery_mode_id', value);
                           // Auto-fill defaults when delivery mode is selected
                           const mode = deliveryModes.find(m => m.id === value);
                           if (mode) {
+                            console.log('Auto-filling with mode defaults:', mode);
                             updateOffering(index, 'duration_days', mode.default_duration_days);
                             updateOffering(index, 'fee', mode.base_fee);
                           }
@@ -93,12 +97,16 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Select delivery mode" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {deliveryModes.map((mode) => (
-                            <SelectItem key={mode.id} value={mode.id}>
-                              {mode.name}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="bg-white border shadow-lg z-50">
+                          {deliveryModes.length === 0 ? (
+                            <div className="p-2 text-gray-500 text-sm">Loading delivery modes...</div>
+                          ) : (
+                            deliveryModes.map((mode) => (
+                              <SelectItem key={mode.id} value={mode.id}>
+                                {mode.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -114,13 +122,14 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                     </div>
 
                     <div>
-                      <Label>Duration (Days)</Label>
+                      <Label>Duration (Days) *</Label>
                       <Input
                         type="number"
                         min="1"
                         value={offering.duration_days}
                         onChange={(e) => updateOffering(index, 'duration_days', parseInt(e.target.value) || 0)}
                         className="mt-1"
+                        required
                       />
                     </div>
 
@@ -134,7 +143,7 @@ const CourseOfferingsFields = ({ formData, deliveryModes, onFieldChange }: Cours
                     </div>
 
                     <div>
-                      <Label>Fee (€)</Label>
+                      <Label>Fee (€) *</Label>
                       <Input
                         type="number"
                         min="0"

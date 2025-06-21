@@ -33,6 +33,7 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
 
   useEffect(() => {
     if (isOpen) {
+      console.log('CourseForm opened, loading delivery modes...');
       loadDeliveryModes();
     }
   }, [isOpen, loadDeliveryModes]);
@@ -62,8 +63,41 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
     }
   }, [isOpen, editingCourse, setFormData, resetForm]);
 
+  const validateForm = () => {
+    if (!formData.course_title.trim()) {
+      return { isValid: false, message: "Course title is required" };
+    }
+
+    if (formData.offerings.length === 0) {
+      return { isValid: false, message: "At least one course offering is required" };
+    }
+
+    for (let i = 0; i < formData.offerings.length; i++) {
+      const offering = formData.offerings[i];
+      if (!offering.delivery_mode_id) {
+        return { isValid: false, message: `Delivery mode is required for offering ${i + 1}` };
+      }
+      if (!offering.duration_days || offering.duration_days <= 0) {
+        return { isValid: false, message: `Valid duration is required for offering ${i + 1}` };
+      }
+      if (typeof offering.fee !== 'number' || offering.fee < 0) {
+        return { isValid: false, message: `Valid fee is required for offering ${i + 1}` };
+      }
+    }
+
+    return { isValid: true, message: "" };
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validation = validateForm();
+    if (!validation.isValid) {
+      console.error('Form validation failed:', validation.message);
+      // You could show a toast here if needed
+      return;
+    }
+
     console.log('Form submitted with data:', formData);
     submitForm(editingCourse?.id);
   };
