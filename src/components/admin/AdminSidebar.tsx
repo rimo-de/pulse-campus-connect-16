@@ -43,7 +43,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
   const { user } = useAuth();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard', 'courses']);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => 
@@ -74,6 +74,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "create-course", title: "Create Course", icon: PlusCircle },
         { id: "manage-courses", title: "Manage Courses", icon: BookOpen },
+        { id: "course-schedule", title: "Course Schedule", icon: Calendar },
       ]
     },
     {
