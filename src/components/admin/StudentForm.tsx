@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useStudentForm } from '@/hooks/useStudentForm';
-import { Tables } from '@/integrations/supabase/types';
+import { CompleteStudent } from '@/types/student';
 import PersonalInfoSection from './forms/PersonalInfoSection';
 import EducationAddressSection from './forms/EducationAddressSection';
 
 interface StudentFormProps {
-  student?: Tables<'students'>;
+  student?: CompleteStudent;
   onSuccess: () => void;
 }
 

@@ -9,56 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      students: {
+      student_addresses: {
         Row: {
           city: string
           created_at: string
-          education_background: string | null
-          email: string
-          english_proficiency: string | null
-          first_name: string
-          gender: string | null
-          german_proficiency: string | null
           id: string
-          last_name: string
-          mobile_number: string | null
-          nationality: string
           postal_code: string
           street: string
+          student_id: string
           updated_at: string
         }
         Insert: {
           city: string
           created_at?: string
-          education_background?: string | null
-          email: string
-          english_proficiency?: string | null
-          first_name: string
-          gender?: string | null
-          german_proficiency?: string | null
           id?: string
-          last_name: string
-          mobile_number?: string | null
-          nationality: string
           postal_code: string
           street: string
+          student_id: string
           updated_at?: string
         }
         Update: {
           city?: string
           created_at?: string
+          id?: string
+          postal_code?: string
+          street?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_addresses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_headers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_enrollments: {
+        Row: {
+          created_at: string
+          education_background: string | null
+          english_proficiency: string | null
+          german_proficiency: string | null
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
           education_background?: string | null
-          email?: string
           english_proficiency?: string | null
+          german_proficiency?: string | null
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          education_background?: string | null
+          english_proficiency?: string | null
+          german_proficiency?: string | null
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_headers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_headers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          gender: string | null
+          id: string
+          last_name: string
+          mobile_number: string | null
+          nationality: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          gender?: string | null
+          id?: string
+          last_name: string
+          mobile_number?: string | null
+          nationality: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
           first_name?: string
           gender?: string | null
-          german_proficiency?: string | null
           id?: string
           last_name?: string
           mobile_number?: string | null
           nationality?: string
-          postal_code?: string
-          street?: string
           updated_at?: string
         }
         Relationships: []

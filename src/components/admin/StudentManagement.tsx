@@ -6,31 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { CompleteStudent } from '@/types/student';
+import { StudentService } from '@/services/studentService';
 import StudentForm from './StudentForm';
 
-interface Student {
-  id: string;
-  first_name: string;
-  last_name: string;
-  gender: string;
-  email: string;
-  mobile_number: string;
-  nationality: string;
-  education_background: string;
-  english_proficiency: string;
-  german_proficiency: string;
-  street: string;
-  postal_code: string;
-  city: string;
-  created_at: string;
-  updated_at: string;
-}
-
 const StudentManagement = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<CompleteStudent[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<CompleteStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchFilters, setSearchFilters] = useState({
     firstName: '',
@@ -39,34 +22,33 @@ const StudentManagement = () => {
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<CompleteStudent | null>(null);
   const { toast } = useToast();
 
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching students:', error);
+      console.log('Fetching students...');
+      
+      const result = await StudentService.getAllStudents();
+      
+      if (result.error) {
         toast({
           title: 'Error',
-          description: 'Failed to fetch students',
+          description: result.error,
           variant: 'destructive',
         });
         return;
       }
 
-      setStudents(data || []);
-      setFilteredStudents(data || []);
+      console.log('Fetched students:', result.data);
+      setStudents(result.data);
+      setFilteredStudents(result.data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching students:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred',
+        description: 'An unexpected error occurred while fetching students',
         variant: 'destructive',
       });
     } finally {
@@ -112,23 +94,15 @@ const StudentManagement = () => {
   const handleStudentAdded = () => {
     fetchStudents();
     setIsAddDialogOpen(false);
-    toast({
-      title: 'Success',
-      description: 'Student added successfully',
-    });
   };
 
   const handleStudentUpdated = () => {
     fetchStudents();
     setIsEditDialogOpen(false);
     setSelectedStudent(null);
-    toast({
-      title: 'Success',
-      description: 'Student updated successfully',
-    });
   };
 
-  const handleEditStudent = (student: Student) => {
+  const handleEditStudent = (student: CompleteStudent) => {
     setSelectedStudent(student);
     setIsEditDialogOpen(true);
   };
@@ -139,16 +113,12 @@ const StudentManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
+      const result = await StudentService.deleteStudent(studentId);
 
-      if (error) {
-        console.error('Error deleting student:', error);
+      if (!result.success) {
         toast({
           title: 'Error',
-          description: 'Failed to delete student',
+          description: result.error || 'Failed to delete student',
           variant: 'destructive',
         });
         return;
@@ -160,7 +130,7 @@ const StudentManagement = () => {
         description: 'Student deleted successfully',
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error deleting student:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',

@@ -1,13 +1,12 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { studentSchema, StudentFormData } from '@/types/student';
-import { Tables } from '@/integrations/supabase/types';
+import { studentFormSchema, StudentFormData, CompleteStudent } from '@/types/student';
+import { StudentService } from '@/services/studentService';
 
 interface UseStudentFormProps {
-  student?: Tables<'students'>;
+  student?: CompleteStudent;
   onSuccess: () => void;
 }
 
@@ -15,7 +14,7 @@ export const useStudentForm = ({ student, onSuccess }: UseStudentFormProps) => {
   const { toast } = useToast();
   
   const form = useForm<StudentFormData>({
-    resolver: zodResolver(studentSchema),
+    resolver: zodResolver(studentFormSchema),
     defaultValues: student ? {
       first_name: student.first_name,
       last_name: student.last_name,
@@ -46,38 +45,26 @@ export const useStudentForm = ({ student, onSuccess }: UseStudentFormProps) => {
   });
 
   const onSubmit = async (data: StudentFormData) => {
+    console.log('Submitting student form with data:', data);
+    
     try {
+      let result;
+      
       if (student) {
         // Update existing student
-        const { error } = await supabase
-          .from('students')
-          .update(data)
-          .eq('id', student.id);
-
-        if (error) {
-          console.error('Error updating student:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to update student',
-            variant: 'destructive',
-          });
-          return;
-        }
+        result = await StudentService.updateStudent(student.id, data);
       } else {
-        // Create new student - remove the type casting that was causing the error
-        const { error } = await supabase
-          .from('students')
-          .insert(data);
+        // Create new student
+        result = await StudentService.createStudent(data);
+      }
 
-        if (error) {
-          console.error('Error creating student:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to create student',
-            variant: 'destructive',
-          });
-          return;
-        }
+      if (!result.success) {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to save student',
+          variant: 'destructive',
+        });
+        return;
       }
 
       toast({
@@ -87,7 +74,7 @@ export const useStudentForm = ({ student, onSuccess }: UseStudentFormProps) => {
       
       onSuccess();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
