@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ interface CourseFormProps {
 }
 
 const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormProps) => {
+  const [isFormReady, setIsFormReady] = useState(false);
+  
   const { formData, handleInputChange, submitForm, resetForm, isLoading, setFormData } = useCourseForm(() => {
     onSuccess();
     onClose();
@@ -33,24 +35,49 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
   };
 
   useEffect(() => {
-    if (editingCourse) {
-      setFormData({
-        course_title: editingCourse.course_title,
-        course_description: editingCourse.course_description || '',
-        massnahmenummer: editingCourse.massnahmenummer || '',
-        number_of_days: editingCourse.number_of_days || 0,
-        delivery_mode: validateDeliveryMode(editingCourse.delivery_mode),
-        delivery_type: validateDeliveryType(editingCourse.delivery_type),
-        curriculum_file: null,
-      });
-    } else {
-      resetForm();
+    console.log('CourseForm useEffect triggered', { isOpen, editingCourse: !!editingCourse });
+    
+    if (isOpen) {
+      setIsFormReady(false);
+      
+      if (editingCourse) {
+        console.log('Setting form data for editing course:', editingCourse);
+        setFormData({
+          course_title: editingCourse.course_title,
+          course_description: editingCourse.course_description || '',
+          massnahmenummer: editingCourse.massnahmenummer || '',
+          number_of_days: editingCourse.number_of_days || 0,
+          delivery_mode: validateDeliveryMode(editingCourse.delivery_mode),
+          delivery_type: validateDeliveryType(editingCourse.delivery_type),
+          curriculum_file: null,
+        });
+      } else {
+        console.log('Resetting form for new course');
+        resetForm();
+      }
+      
+      // Small delay to ensure state is properly set
+      setTimeout(() => {
+        setIsFormReady(true);
+        console.log('Form is ready for interaction');
+      }, 100);
     }
-  }, [editingCourse, setFormData, resetForm]);
+  }, [isOpen, editingCourse, setFormData, resetForm]);
+
+  // Debug current form data
+  useEffect(() => {
+    console.log('Current form data:', formData);
+  }, [formData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
     submitForm(editingCourse?.id);
+  };
+
+  const handleInputChangeWithLog = (field: keyof typeof formData, value: any) => {
+    console.log(`Updating field ${field} with value:`, value);
+    handleInputChange(field, value);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +86,8 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
       alert('Please select a PDF file');
       return;
     }
-    handleInputChange('curriculum_file', file);
+    console.log('File selected:', file?.name);
+    handleInputChangeWithLog('curriculum_file', file);
   };
 
   if (!isOpen) return null;
@@ -82,144 +110,173 @@ const CourseForm = ({ isOpen, onClose, onSuccess, editingCourse }: CourseFormPro
           </CardHeader>
           
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Course Title */}
-              <div>
-                <Label htmlFor="course_title">Course Title *</Label>
-                <Input
-                  id="course_title"
-                  value={formData.course_title}
-                  onChange={(e) => handleInputChange('course_title', e.target.value)}
-                  required
-                  className="mt-1"
-                />
+            {!isFormReady ? (
+              <div className="text-center py-8">
+                <p>Loading form...</p>
               </div>
-
-              {/* Course Description */}
-              <div>
-                <Label htmlFor="course_description">Course Description</Label>
-                <Textarea
-                  id="course_description"
-                  value={formData.course_description}
-                  onChange={(e) => handleInputChange('course_description', e.target.value)}
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Maßnahmenummer */}
-              <div>
-                <Label htmlFor="massnahmenummer">Maßnahmenummer</Label>
-                <Input
-                  id="massnahmenummer"
-                  value={formData.massnahmenummer}
-                  onChange={(e) => handleInputChange('massnahmenummer', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Number of Days and Units */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Course Title */}
                 <div>
-                  <Label htmlFor="number_of_days">Number of Days</Label>
+                  <Label htmlFor="course_title">Course Title *</Label>
                   <Input
-                    id="number_of_days"
-                    type="number"
-                    min="0"
-                    value={formData.number_of_days}
-                    onChange={(e) => handleInputChange('number_of_days', parseInt(e.target.value) || 0)}
+                    id="course_title"
+                    value={formData.course_title}
+                    onChange={(e) => {
+                      console.log('Course title changed:', e.target.value);
+                      handleInputChangeWithLog('course_title', e.target.value);
+                    }}
+                    required
                     className="mt-1"
+                    placeholder="Enter course title"
                   />
                 </div>
+
+                {/* Course Description */}
                 <div>
-                  <Label htmlFor="number_of_units">Number of Units (Read Only)</Label>
+                  <Label htmlFor="course_description">Course Description</Label>
+                  <Textarea
+                    id="course_description"
+                    value={formData.course_description}
+                    onChange={(e) => {
+                      console.log('Course description changed:', e.target.value);
+                      handleInputChangeWithLog('course_description', e.target.value);
+                    }}
+                    rows={3}
+                    className="mt-1"
+                    placeholder="Enter course description"
+                  />
+                </div>
+
+                {/* Maßnahmenummer */}
+                <div>
+                  <Label htmlFor="massnahmenummer">Maßnahmenummer</Label>
                   <Input
-                    id="number_of_units"
-                    value={numberOfUnits}
-                    readOnly
-                    className="mt-1 bg-gray-50"
+                    id="massnahmenummer"
+                    value={formData.massnahmenummer}
+                    onChange={(e) => {
+                      console.log('Massnahmenummer changed:', e.target.value);
+                      handleInputChangeWithLog('massnahmenummer', e.target.value);
+                    }}
+                    className="mt-1"
+                    placeholder="Enter Maßnahmenummer"
                   />
                 </div>
-              </div>
 
-              {/* Delivery Mode and Type */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="delivery_mode">Delivery Mode</Label>
-                  <Select
-                    value={formData.delivery_mode}
-                    onValueChange={(value: 'Online' | 'Remote') => handleInputChange('delivery_mode', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Online">Online</SelectItem>
-                      <SelectItem value="Remote">Remote</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="delivery_type">Delivery Type</Label>
-                  <Select
-                    value={formData.delivery_type}
-                    onValueChange={(value: 'Full time' | 'Part time') => handleInputChange('delivery_type', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Full time">Full time</SelectItem>
-                      <SelectItem value="Part time">Part time</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Curriculum File Upload */}
-              <div>
-                <Label htmlFor="curriculum_file">Detailed Curriculum (PDF)</Label>
-                <div className="mt-1">
-                  <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <div className="text-center">
-                      {formData.curriculum_file ? (
-                        <div className="flex items-center space-x-2 text-green-600">
-                          <FileText className="w-6 h-6" />
-                          <span className="text-sm font-medium">{formData.curriculum_file.name}</span>
-                        </div>
-                      ) : (
-                        <div className="text-gray-500">
-                          <Upload className="w-8 h-8 mx-auto mb-2" />
-                          <p className="text-sm">Click to upload PDF file</p>
-                          <p className="text-xs">or drag and drop</p>
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileChange}
-                      className="hidden"
+                {/* Number of Days and Units */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="number_of_days">Number of Days</Label>
+                    <Input
+                      id="number_of_days"
+                      type="number"
+                      min="0"
+                      value={formData.number_of_days}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        console.log('Number of days changed:', value);
+                        handleInputChangeWithLog('number_of_days', value);
+                      }}
+                      className="mt-1"
+                      placeholder="0"
                     />
-                  </label>
+                  </div>
+                  <div>
+                    <Label htmlFor="number_of_units">Number of Units (Read Only)</Label>
+                    <Input
+                      id="number_of_units"
+                      value={numberOfUnits}
+                      readOnly
+                      className="mt-1 bg-gray-50"
+                    />
+                  </div>
                 </div>
-                {editingCourse?.curriculum_file_name && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Current file: {editingCourse.curriculum_file_name}
-                  </p>
-                )}
-              </div>
 
-              {/* Form Actions */}
-              <div className="flex space-x-3 pt-4">
-                <Button type="submit" disabled={isLoading} className="edu-button flex-1">
-                  {isLoading ? 'Saving...' : editingCourse ? 'Update Course' : 'Create Course'}
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            </form>
+                {/* Delivery Mode and Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="delivery_mode">Delivery Mode</Label>
+                    <Select
+                      value={formData.delivery_mode}
+                      onValueChange={(value: 'Online' | 'Remote') => {
+                        console.log('Delivery mode changed:', value);
+                        handleInputChangeWithLog('delivery_mode', value);
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Online">Online</SelectItem>
+                        <SelectItem value="Remote">Remote</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="delivery_type">Delivery Type</Label>
+                    <Select
+                      value={formData.delivery_type}
+                      onValueChange={(value: 'Full time' | 'Part time') => {
+                        console.log('Delivery type changed:', value);
+                        handleInputChangeWithLog('delivery_type', value);
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Full time">Full time</SelectItem>
+                        <SelectItem value="Part time">Part time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Curriculum File Upload */}
+                <div>
+                  <Label htmlFor="curriculum_file">Detailed Curriculum (PDF)</Label>
+                  <div className="mt-1">
+                    <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <div className="text-center">
+                        {formData.curriculum_file ? (
+                          <div className="flex items-center space-x-2 text-green-600">
+                            <FileText className="w-6 h-6" />
+                            <span className="text-sm font-medium">{formData.curriculum_file.name}</span>
+                          </div>
+                        ) : (
+                          <div className="text-gray-500">
+                            <Upload className="w-8 h-8 mx-auto mb-2" />
+                            <p className="text-sm">Click to upload PDF file</p>
+                            <p className="text-xs">or drag and drop</p>
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {editingCourse?.curriculum_file_name && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current file: {editingCourse.curriculum_file_name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex space-x-3 pt-4">
+                  <Button type="submit" disabled={isLoading} className="edu-button flex-1">
+                    {isLoading ? 'Saving...' : editingCourse ? 'Update Course' : 'Create Course'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>
