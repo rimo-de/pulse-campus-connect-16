@@ -97,7 +97,7 @@ const StudentForm = ({ student, onSuccess }: StudentFormProps) => {
         // Create new student
         const { error } = await supabase
           .from('students')
-          .insert([data]);
+          .insert(data);
 
         if (error) {
           console.error('Error creating student:', error);
@@ -110,6 +110,11 @@ const StudentForm = ({ student, onSuccess }: StudentFormProps) => {
         }
       }
 
+      toast({
+        title: 'Success',
+        description: student ? 'Student updated successfully' : 'Student created successfully',
+      });
+      
       onSuccess();
     } catch (error) {
       console.error('Error:', error);
