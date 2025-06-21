@@ -90,7 +90,7 @@ export const holidayService = {
       total_calendar_days: totalCalendarDays,
       working_days: workingDays,
       holidays_skipped: holidaysSkipped,
-      weekends_skipped
+      weekends_skipped: weekendsSkipped
     };
   },
 
