@@ -24,7 +24,7 @@ const DashboardOverview = () => {
 
         // Fetch trainer count
         const trainersResult = await TrainerService.getAllTrainers();
-        setTrainerCount(trainersResult.length);
+        setTrainerCount(trainersResult.data.length);
       } catch (error) {
         console.error('Error fetching counts:', error);
       }
