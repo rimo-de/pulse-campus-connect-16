@@ -247,7 +247,7 @@ const AssetStatusDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <Table Head>Asset</TableHead>
+                        <TableHead>Asset</TableHead>
                         <TableHead>Assigned To</TableHead>
                         <TableHead>Assignment Date</TableHead>
                         <TableHead>Return Date</TableHead>
