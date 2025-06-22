@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { StudentService } from '@/services/studentService';
 import { courseService } from '@/services/courseService';
+import { trainerService } from '@/services/trainerService';
 import DashboardStats from './DashboardStats';
 import RecentActivity from './RecentActivity';
 
 const DashboardOverview = () => {
   const [studentCount, setStudentCount] = useState(0);
   const [courseCount, setCourseCount] = useState(0);
+  const [trainerCount, setTrainerCount] = useState(0);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -19,6 +21,10 @@ const DashboardOverview = () => {
         // Fetch course count
         const coursesResult = await courseService.getAllCourses();
         setCourseCount(coursesResult.length);
+
+        // Fetch trainer count
+        const trainersResult = await trainerService.getAllTrainers();
+        setTrainerCount(trainersResult.length);
       } catch (error) {
         console.error('Error fetching counts:', error);
       }
@@ -34,7 +40,11 @@ const DashboardOverview = () => {
         <p className="text-gray-600">Here's what's happening at your institution today.</p>
       </div>
 
-      <DashboardStats studentCount={studentCount} courseCount={courseCount} />
+      <DashboardStats 
+        studentCount={studentCount} 
+        courseCount={courseCount} 
+        trainerCount={trainerCount}
+      />
       <RecentActivity />
     </div>
   );
