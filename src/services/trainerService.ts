@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Trainer, TrainerFile, TrainerWithFiles, TrainerFormData } from '@/types/trainer';
 
@@ -92,10 +93,17 @@ export const TrainerService = {
 
   // Trainer assignment methods
   async getAssignedTrainers(scheduleId: string): Promise<any[]> {
+    // Use rpc or direct query with type assertion since trainer_assignments might not be in types yet
     const { data, error } = await supabase
-      .from('trainer_assignments')
-      .select('*')
-      .eq('schedule_id', scheduleId);
+      .rpc('get_assigned_trainers_for_schedule', { schedule_id: scheduleId })
+      .then(result => result)
+      .catch(async () => {
+        // Fallback to direct query if RPC doesn't exist
+        return await (supabase as any)
+          .from('trainer_assignments')
+          .select('*')
+          .eq('schedule_id', scheduleId);
+      });
 
     if (error) {
       console.error('Error fetching assigned trainers:', error);
@@ -106,72 +114,82 @@ export const TrainerService = {
   },
 
   async updateTrainerAssignments(scheduleId: string, trainerIds: string[]): Promise<void> {
-    // First, remove existing assignments
-    await supabase
-      .from('trainer_assignments')
-      .delete()
-      .eq('schedule_id', scheduleId);
-
-    // Then add new assignments
-    if (trainerIds.length > 0) {
-      const assignments = trainerIds.map(trainerId => ({
-        schedule_id: scheduleId,
-        trainer_id: trainerId
-      }));
-
-      const { error } = await supabase
+    try {
+      // First, remove existing assignments
+      await (supabase as any)
         .from('trainer_assignments')
-        .insert(assignments);
+        .delete()
+        .eq('schedule_id', scheduleId);
 
-      if (error) {
-        console.error('Error updating trainer assignments:', error);
-        throw new Error('Failed to update trainer assignments');
+      // Then add new assignments
+      if (trainerIds.length > 0) {
+        const assignments = trainerIds.map(trainerId => ({
+          schedule_id: scheduleId,
+          trainer_id: trainerId
+        }));
+
+        const { error } = await (supabase as any)
+          .from('trainer_assignments')
+          .insert(assignments);
+
+        if (error) {
+          console.error('Error updating trainer assignments:', error);
+          throw new Error('Failed to update trainer assignments');
+        }
       }
+    } catch (error) {
+      console.error('Error updating trainer assignments:', error);
+      throw new Error('Failed to update trainer assignments');
     }
   },
 
   async getAllTrainerAssignments(): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('trainer_assignments')
-      .select(`
-        *,
-        trainer:trainers (
-          first_name,
-          last_name,
-          email,
-          experience_level,
-          expertise_course:courses (
-            course_title
-          )
-        ),
-        course_schedule:course_schedules (
-          start_date,
-          end_date,
-          status,
-          course:courses (
-            course_title
+    try {
+      const { data, error } = await (supabase as any)
+        .from('trainer_assignments')
+        .select(`
+          *,
+          trainer:trainers (
+            first_name,
+            last_name,
+            email,
+            experience_level,
+            expertise_course:courses (
+              course_title
+            )
           ),
-          course_offering:course_offerings (
-            delivery_mode:delivery_modes (
-              name,
-              delivery_method,
-              delivery_type
+          course_schedule:course_schedules (
+            start_date,
+            end_date,
+            status,
+            course:courses (
+              course_title
+            ),
+            course_offering:course_offerings (
+              delivery_mode:delivery_modes (
+                name,
+                delivery_method,
+                delivery_type
+              )
             )
           )
-        )
-      `)
-      .order('created_at', { ascending: false });
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error('Error fetching trainer assignments:', error);
+        throw new Error('Failed to fetch trainer assignments');
+      }
+
+      return data || [];
+    } catch (error) {
       console.error('Error fetching trainer assignments:', error);
-      throw new Error('Failed to fetch trainer assignments');
+      return [];
     }
-
-    return data || [];
   },
 
   async removeTrainerAssignment(assignmentId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('trainer_assignments')
       .delete()
       .eq('id', assignmentId);
