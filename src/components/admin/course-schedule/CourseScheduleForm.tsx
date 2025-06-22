@@ -1,19 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Info, X } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { courseService } from '@/services/courseService';
 import { courseScheduleService } from '@/services/courseScheduleService';
 import { holidayService } from '@/services/holidayService';
+import CourseSelectionFields from './form/CourseSelectionFields';
+import DateSelectionField from './form/DateSelectionField';
+import DateCalculationDisplay from './form/DateCalculationDisplay';
+import CourseScheduleFormActions from './form/CourseScheduleFormActions';
 import type { CourseWithOfferings, CourseOffering, CourseSchedule, DateCalculationResult } from '@/types/course';
 
 interface CourseScheduleFormProps {
@@ -128,18 +125,6 @@ const CourseScheduleForm = ({ isOpen, onClose, onSuccess, editingSchedule }: Cou
     return selectedCourse?.course_offerings.find(offering => offering.id === selectedOfferingId);
   };
 
-  const getAvailableOfferings = (): CourseOffering[] => {
-    const selectedCourse = getSelectedCourse();
-    return selectedCourse?.course_offerings.filter(offering => offering.is_active) || [];
-  };
-
-  const isDateDisabled = (date: Date) => {
-    // Disable past dates
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -187,6 +172,8 @@ const CourseScheduleForm = ({ isOpen, onClose, onSuccess, editingSchedule }: Cou
     }
   };
 
+  const isFormValid = selectedCourseId && selectedOfferingId && startDate;
+
   if (!isOpen) return null;
 
   return (
@@ -204,122 +191,30 @@ const CourseScheduleForm = ({ isOpen, onClose, onSuccess, editingSchedule }: Cou
           
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Course Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="course">Course *</Label>
-                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map(course => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.course_title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <CourseSelectionFields
+                courses={courses}
+                selectedCourseId={selectedCourseId}
+                selectedOfferingId={selectedOfferingId}
+                onCourseChange={setSelectedCourseId}
+                onOfferingChange={setSelectedOfferingId}
+              />
 
-              {/* Offering Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="offering">Delivery Mode *</Label>
-                <Select 
-                  value={selectedOfferingId} 
-                  onValueChange={setSelectedOfferingId}
-                  disabled={!selectedCourseId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select delivery mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableOfferings().map(offering => (
-                      <SelectItem key={offering.id} value={offering.id}>
-                        <div>
-                          <div>{offering.delivery_mode?.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {offering.delivery_mode?.delivery_method} • {offering.delivery_mode?.delivery_type} • {offering.duration_days} days
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <DateSelectionField
+                startDate={startDate}
+                onDateChange={setStartDate}
+              />
 
-              {/* Start Date */}
-              <div className="space-y-2">
-                <Label>Start Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      disabled={isDateDisabled}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <DateCalculationDisplay
+                dateCalculation={dateCalculation}
+                isCalculating={isCalculating}
+              />
 
-              {/* Date Calculation Results */}
-              {dateCalculation && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Info className="w-4 h-4 text-blue-600" />
-                    <h4 className="font-medium text-blue-900">Schedule Calculation</h4>
-                  </div>
-                  <div className="text-sm text-blue-800 space-y-1">
-                    <div><strong>End Date:</strong> {format(dateCalculation.end_date, 'PPP')}</div>
-                    <div><strong>Working Days:</strong> {dateCalculation.working_days}</div>
-                    <div><strong>Total Calendar Days:</strong> {dateCalculation.total_calendar_days}</div>
-                    {dateCalculation.weekends_skipped > 0 && (
-                      <div><strong>Weekends Skipped:</strong> {dateCalculation.weekends_skipped}</div>
-                    )}
-                    {dateCalculation.holidays_skipped.length > 0 && (
-                      <div>
-                        <strong>Holidays Skipped:</strong> {dateCalculation.holidays_skipped.length}
-                        <div className="ml-4 text-xs">
-                          {dateCalculation.holidays_skipped.map(holiday => (
-                            <div key={holiday.date}>{holiday.name} ({format(new Date(holiday.date), 'dd MMM')})</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {isCalculating && (
-                    <div className="text-sm text-blue-600">Calculating with German holidays...</div>
-                  )}
-                </div>
-              )}
-
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-4 pt-4">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !selectedCourseId || !selectedOfferingId || !startDate}
-                  className="edu-button"
-                >
-                  {isLoading ? 'Saving...' : editingSchedule ? 'Update Schedule' : 'Create Schedule'}
-                </Button>
-              </div>
+              <CourseScheduleFormActions
+                onCancel={onClose}
+                isLoading={isLoading}
+                isFormValid={!!isFormValid}
+                isEditMode={!!editingSchedule}
+              />
             </form>
           </CardContent>
         </Card>
