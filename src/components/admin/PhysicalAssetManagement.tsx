@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,12 +16,14 @@ import type { Database } from '@/integrations/supabase/types';
 
 type PhysicalAsset = Database['public']['Tables']['physical_assets']['Row'];
 
+interface StudentInfo {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
 interface PhysicalAssetWithStudent extends PhysicalAsset {
-  assigned_student?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  };
+  assigned_student?: StudentInfo;
 }
 
 const PhysicalAssetManagement = () => {
@@ -38,6 +39,7 @@ const PhysicalAssetManagement = () => {
   const [selectedAssetForHistory, setSelectedAssetForHistory] = useState<PhysicalAsset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingStudents, setLoadingStudents] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,9 +64,23 @@ const PhysicalAssetManagement = () => {
     try {
       setIsLoading(true);
       setLoadError(null);
-      const data = await physicalAssetService.getAssetsWithStudentInfo();
-      setAssets(data);
+      console.log('Loading assets...');
+      
+      // Use getAllAssets instead of getAssetsWithStudentInfo to avoid the join error
+      const data = await physicalAssetService.getAllAssets();
       console.log('Assets loaded successfully:', data.length);
+      
+      // Convert to the expected format and load student data for assigned assets
+      const assetsWithPlaceholder = data.map(asset => ({
+        ...asset,
+        assigned_student: undefined
+      }));
+      
+      setAssets(assetsWithPlaceholder);
+      
+      // Load student information for assigned assets
+      await loadStudentDataForAssignedAssets(assetsWithPlaceholder);
+      
     } catch (error) {
       console.error('Error loading assets:', error);
       setLoadError(error instanceof Error ? error.message : 'Failed to load assets');
@@ -75,6 +91,48 @@ const PhysicalAssetManagement = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadStudentDataForAssignedAssets = async (assetsData: PhysicalAssetWithStudent[]) => {
+    const studentPromises = assetsData
+      .filter(asset => asset.assigned_to_type === 'student' && asset.assigned_to_id)
+      .map(async (asset) => {
+        try {
+          setLoadingStudents(prev => new Set([...prev, asset.id]));
+          const studentData = await physicalAssetService.getStudentById(asset.assigned_to_id!);
+          return { assetId: asset.id, studentData };
+        } catch (error) {
+          console.error(`Error loading student data for asset ${asset.id}:`, error);
+          return { assetId: asset.id, studentData: null };
+        } finally {
+          setLoadingStudents(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(asset.id);
+            return newSet;
+          });
+        }
+      });
+
+    if (studentPromises.length > 0) {
+      const studentResults = await Promise.allSettled(studentPromises);
+      
+      setAssets(prevAssets => 
+        prevAssets.map(asset => {
+          const studentResult = studentResults.find(result => 
+            result.status === 'fulfilled' && result.value.assetId === asset.id
+          );
+          
+          if (studentResult && studentResult.status === 'fulfilled' && studentResult.value.studentData) {
+            return {
+              ...asset,
+              assigned_student: studentResult.value.studentData
+            };
+          }
+          
+          return asset;
+        })
+      );
     }
   };
 
@@ -193,20 +251,37 @@ const PhysicalAssetManagement = () => {
   };
 
   const renderAssignedStudent = (asset: PhysicalAssetWithStudent) => {
-    if (asset.assigned_student) {
-      return (
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="w-3 h-3 text-blue-600" />
+    if (asset.assigned_to_type === 'student' && asset.assigned_to_id) {
+      if (loadingStudents.has(asset.id)) {
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm text-gray-500">Loading...</span>
           </div>
-          <div className="text-sm">
-            <div className="font-medium text-gray-900">
-              {asset.assigned_student.first_name} {asset.assigned_student.last_name}
+        );
+      }
+
+      if (asset.assigned_student) {
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="w-3 h-3 text-blue-600" />
             </div>
-            <div className="text-gray-500 text-xs">{asset.assigned_student.email}</div>
+            <div className="text-sm">
+              <div className="font-medium text-gray-900">
+                {asset.assigned_student.first_name} {asset.assigned_student.last_name}
+              </div>
+              <div className="text-gray-500 text-xs">{asset.assigned_student.email}</div>
+            </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        return (
+          <div className="text-sm text-red-500">
+            Student data unavailable
+          </div>
+        );
+      }
     }
 
     if (asset.status === 'available') {

@@ -26,38 +26,6 @@ export const physicalAssetService = {
     }
   },
 
-  async getAssetsWithStudentInfo(): Promise<any[]> {
-    try {
-      const { data, error } = await supabase
-        .from('physical_assets')
-        .select(`
-          *,
-          student_headers!left(
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching assets with student info:', error);
-        throw new Error(`Failed to fetch assets with student info: ${error.message}`);
-      }
-
-      // Transform the data to include assigned_student info
-      return (data || []).map(asset => ({
-        ...asset,
-        assigned_student: asset.assigned_to_type === 'student' && asset.student_headers 
-          ? asset.student_headers 
-          : null
-      }));
-    } catch (error) {
-      console.error('Service error fetching assets with student info:', error);
-      throw error;
-    }
-  },
-
   async createAsset(asset: PhysicalAssetInsert): Promise<PhysicalAsset> {
     try {
       // Handle empty serial number by setting it to null if empty string
