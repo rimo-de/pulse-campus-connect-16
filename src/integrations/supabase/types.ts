@@ -340,6 +340,91 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_files_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainers: {
+        Row: {
+          created_at: string
+          email: string
+          experience_level: string
+          expertise_area: string | null
+          first_name: string
+          id: string
+          last_name: string
+          mobile_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          experience_level: string
+          expertise_area?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          mobile_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          experience_level?: string
+          expertise_area?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          mobile_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainers_expertise_area_fkey"
+            columns: ["expertise_area"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

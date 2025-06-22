@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Users, 
@@ -13,6 +14,7 @@ import StudentManagement from './StudentManagement';
 import CourseManagement from './CourseManagement';
 import CourseScheduleManagement from './CourseScheduleManagement';
 import EnrolledStudentsView from './EnrolledStudentsView';
+import TrainerManagement from './TrainerManagement';
 import DashboardOverview from './dashboard/DashboardOverview';
 import PlaceholderContent from './dashboard/PlaceholderContent';
 
@@ -32,14 +34,14 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <CourseManagement />;
     case 'course-schedule':
       return <CourseScheduleManagement />;
+    case 'manage-trainers':
+      return <TrainerManagement />;
     case 'add-student':
       return <PlaceholderContent title="Add Student" description="Register new students to the system" icon={UserPlus} />;
     case 'view-students':
       return <PlaceholderContent title="View Students" description="Manage and view all registered students" icon={Users} />;
     case 'enrollments':
       return <PlaceholderContent title="Enrollments" description="Track and manage student enrollments" icon={BookOpen} />;
-    case 'manage-trainers':
-      return <PlaceholderContent title="Manage Trainers" description="Add and manage trainer accounts" icon={GraduationCap} />;
     case 'trainer-assignments':
       return <PlaceholderContent title="Trainer Assignments" description="Assign trainers to courses and students" icon={Users} />;
     case 'analytics':
@@ -56,6 +58,12 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <PlaceholderContent title="System Settings" description="Configure system-wide settings" icon={Settings} />;
     case 'user-management':
       return <PlaceholderContent title="User Management" description="Manage user accounts and permissions" icon={Users} />;
+    case 'manage-assets':
+      return <PlaceholderContent title="Manage Assets" description="Manage system assets and resources" icon={Settings} />;
+    case 'media-library':
+      return <PlaceholderContent title="Media Library" description="Manage media files and documents" icon={Settings} />;
+    case 'file-storage':
+      return <PlaceholderContent title="File Storage" description="Manage file storage and organization" icon={Settings} />;
     default:
       return <DashboardOverview />;
   }
