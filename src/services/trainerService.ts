@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Trainer, TrainerFile, TrainerWithFiles, TrainerFormData } from '@/types/trainer';
 
@@ -93,33 +92,45 @@ export const TrainerService = {
 
   // Trainer assignment methods
   async getAssignedTrainers(scheduleId: string): Promise<any[]> {
-    // Use rpc or direct query with type assertion since trainer_assignments might not be in types yet
-    const { data, error } = await supabase
-      .rpc('get_assigned_trainers_for_schedule', { schedule_id: scheduleId })
-      .then(result => result)
-      .catch(async () => {
-        // Fallback to direct query if RPC doesn't exist
-        return await (supabase as any)
-          .from('trainer_assignments')
-          .select('*')
-          .eq('schedule_id', scheduleId);
-      });
+    try {
+      // Try RPC first, then fallback to direct query
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_assigned_trainers_for_schedule', { schedule_id: scheduleId });
 
-    if (error) {
+      if (!rpcError && rpcData) {
+        return rpcData;
+      }
+
+      // Fallback to direct query if RPC doesn't exist or fails
+      const { data, error } = await supabase
+        .from('trainer_assignments')
+        .select('*')
+        .eq('schedule_id', scheduleId);
+
+      if (error) {
+        console.error('Error fetching assigned trainers:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
       console.error('Error fetching assigned trainers:', error);
       return [];
     }
-
-    return data || [];
   },
 
   async updateTrainerAssignments(scheduleId: string, trainerIds: string[]): Promise<void> {
     try {
       // First, remove existing assignments
-      await (supabase as any)
+      const { error: deleteError } = await supabase
         .from('trainer_assignments')
         .delete()
         .eq('schedule_id', scheduleId);
+
+      if (deleteError) {
+        console.error('Error removing existing assignments:', deleteError);
+        throw new Error('Failed to remove existing trainer assignments');
+      }
 
       // Then add new assignments
       if (trainerIds.length > 0) {
@@ -128,7 +139,7 @@ export const TrainerService = {
           trainer_id: trainerId
         }));
 
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('trainer_assignments')
           .insert(assignments);
 
@@ -145,7 +156,7 @@ export const TrainerService = {
 
   async getAllTrainerAssignments(): Promise<any[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('trainer_assignments')
         .select(`
           *,
@@ -189,7 +200,7 @@ export const TrainerService = {
   },
 
   async removeTrainerAssignment(assignmentId: string): Promise<void> {
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('trainer_assignments')
       .delete()
       .eq('id', assignmentId);
