@@ -26,13 +26,13 @@ export interface TrainerSkill {
   updated_at: string;
 }
 
-// Trainer document interface
+// Trainer document interface - updated to match actual usage
 export interface TrainerDocument {
   id: string;
   trainer_id: string;
   file_name: string;
   file_url: string;
-  file_type: 'pdf' | 'image' | 'docx';
+  file_type: 'profile' | 'certificate';
   created_at: string;
   updated_at: string;
 }
