@@ -34,6 +34,8 @@ const TrainerManagement = () => {
   const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
   const { toast } = useToast();
 
+  console.log('TrainerManagement: Component rendered, showFormModal:', showFormModal);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -44,14 +46,17 @@ const TrainerManagement = () => {
 
   const loadData = async () => {
     try {
+      console.log('TrainerManagement: Loading data...');
       setIsLoading(true);
       const [trainerData, courseData] = await Promise.all([
         TrainerService.getAllTrainers(),
         courseService.getAllCourses()
       ]);
+      console.log('TrainerManagement: Data loaded - trainers:', trainerData.data.length, 'courses:', courseData.length);
       setTrainers(trainerData.data);
       setCourses(courseData);
     } catch (error) {
+      console.error('TrainerManagement: Error loading data:', error);
       toast({
         title: "Error",
         description: "Failed to load trainers",
@@ -84,16 +89,19 @@ const TrainerManagement = () => {
   };
 
   const handleAddTrainer = () => {
+    console.log('TrainerManagement: Add trainer clicked');
     setEditingTrainer(null);
     setShowFormModal(true);
   };
 
   const handleEditTrainer = (trainer: Trainer) => {
+    console.log('TrainerManagement: Edit trainer clicked for:', trainer.id);
     setEditingTrainer(trainer);
     setShowFormModal(true);
   };
 
   const handleDeleteTrainer = async (trainer: Trainer) => {
+    console.log('TrainerManagement: Delete trainer clicked for:', trainer.id);
     if (!confirm(`Are you sure you want to delete ${trainer.first_name} ${trainer.last_name}?`)) {
       return;
     }
@@ -106,6 +114,7 @@ const TrainerManagement = () => {
       });
       loadData();
     } catch (error) {
+      console.error('TrainerManagement: Error deleting trainer:', error);
       toast({
         title: "Error",
         description: "Failed to delete trainer",
@@ -115,7 +124,16 @@ const TrainerManagement = () => {
   };
 
   const handleFormSuccess = () => {
+    console.log('TrainerManagement: Form success callback triggered');
     loadData();
+    setShowFormModal(false);
+    setEditingTrainer(null);
+  };
+
+  const handleCloseModal = () => {
+    console.log('TrainerManagement: Close modal triggered');
+    setShowFormModal(false);
+    setEditingTrainer(null);
   };
 
   const getExperienceBadgeColor = (level: string) => {
@@ -189,7 +207,10 @@ const TrainerManagement = () => {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8">Loading trainers...</div>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Loading trainers...</p>
+            </div>
           ) : filteredTrainers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {trainers.length === 0 ? 'No trainers registered yet.' : 'No trainers match your search criteria.'}
@@ -197,7 +218,7 @@ const TrainerManagement = () => {
           ) : (
             <div className="space-y-4">
               {filteredTrainers.map((trainer) => (
-                <div key={trainer.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                <div key={trainer.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
@@ -241,7 +262,7 @@ const TrainerManagement = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteTrainer(trainer)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -256,7 +277,7 @@ const TrainerManagement = () => {
 
       <TrainerFormModal
         isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
+        onClose={handleCloseModal}
         trainer={editingTrainer}
         onSuccess={handleFormSuccess}
       />

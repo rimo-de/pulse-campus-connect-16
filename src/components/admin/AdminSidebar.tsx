@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Sidebar,
@@ -76,7 +75,6 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       collapsible: true,
       items: [
         { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
-        { id: "assigned-trainers", title: "Assigned Trainers", icon: UserCheck },
       ]
     },
     {
@@ -86,6 +84,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "create-course", title: "Maintain Course", icon: PlusCircle },
         { id: "course-schedule", title: "Course Schedule", icon: Calendar },
+        { id: "assigned-trainers", title: "Assigned Trainers", icon: UserCheck },
         { id: "view-enrolled-students", title: "View Enrolled Students", icon: UserCheck },
       ]
     },
