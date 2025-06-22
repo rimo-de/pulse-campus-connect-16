@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,6 +45,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
       const data = await courseService.getAllCourses();
       setCourses(data);
     } catch (error) {
+      console.error('Failed to load courses:', error);
       toast({
         title: "Error",
         description: "Failed to load courses",
@@ -70,6 +72,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
       }
       onSuccess();
     } catch (error: any) {
+      console.error('Error saving trainer:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save trainer",
@@ -153,7 +156,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Experience Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select experience level" />
@@ -177,7 +180,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Expertise Area</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select expertise area" />

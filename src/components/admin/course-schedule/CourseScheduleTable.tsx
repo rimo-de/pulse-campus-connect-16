@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Copy, Users, UserPlus } from 'lucide-react';
+import { Edit, Trash2, Copy, Users, UserPlus, GraduationCap } from 'lucide-react';
 import { format } from 'date-fns';
 import type { CourseSchedule } from '@/types/course';
 
@@ -14,6 +14,7 @@ interface CourseScheduleTableProps {
   onDuplicateSchedule: (schedule: CourseSchedule) => void;
   onAssignStudents: (schedule: CourseSchedule) => void;
   onViewEnrolledStudents: (schedule: CourseSchedule) => void;
+  onAssignTrainers: (schedule: CourseSchedule) => void;
 }
 
 const CourseScheduleTable = ({
@@ -22,7 +23,8 @@ const CourseScheduleTable = ({
   onDeleteSchedule,
   onDuplicateSchedule,
   onAssignStudents,
-  onViewEnrolledStudents
+  onViewEnrolledStudents,
+  onAssignTrainers
 }: CourseScheduleTableProps) => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -53,6 +55,7 @@ const CourseScheduleTable = ({
             <TableHead>Duration</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Students</TableHead>
+            <TableHead>Trainers</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -109,6 +112,17 @@ const CourseScheduleTable = ({
                     <UserPlus className="w-4 h-4" />
                   </Button>
                 </div>
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAssignTrainers(schedule)}
+                  className="text-purple-600 hover:text-purple-700"
+                  title="Assign trainers"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                </Button>
               </TableCell>
               <TableCell>
                 <div className="flex space-x-2">

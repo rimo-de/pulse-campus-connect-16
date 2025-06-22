@@ -15,6 +15,7 @@ import CourseManagement from './CourseManagement';
 import CourseScheduleManagement from './CourseScheduleManagement';
 import EnrolledStudentsView from './EnrolledStudentsView';
 import TrainerManagement from './TrainerManagement';
+import AssignedTrainersView from './AssignedTrainersView';
 import DashboardOverview from './dashboard/DashboardOverview';
 import PlaceholderContent from './dashboard/PlaceholderContent';
 
@@ -36,6 +37,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <CourseScheduleManagement />;
     case 'manage-trainers':
       return <TrainerManagement />;
+    case 'assigned-trainers':
+      return <AssignedTrainersView />;
     case 'add-student':
       return <PlaceholderContent title="Add Student" description="Register new students to the system" icon={UserPlus} />;
     case 'view-students':

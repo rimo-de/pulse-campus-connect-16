@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -9,13 +8,14 @@ import CourseScheduleControls from './course-schedule/CourseScheduleControls';
 import CourseScheduleTable from './course-schedule/CourseScheduleTable';
 import StudentAssignmentModal from './course-schedule/StudentAssignmentModal';
 import EnrolledStudentsList from './course-schedule/EnrolledStudentsList';
+import TrainerAssignmentModal from './course-schedule/TrainerAssignmentModal';
 import type { CourseSchedule } from '@/types/course';
 
 const CourseScheduleManagement = () => {
   const [schedules, setSchedules] = useState<CourseSchedule[]>([]);
   const [filteredSchedules, setFilteredSchedules] = useState<CourseSchedule[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter]  = useState<string>('all');
   const [monthFilter, setMonthFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -23,6 +23,7 @@ const CourseScheduleManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const [isEnrolledListOpen, setIsEnrolledListOpen] = useState(false);
+  const [isTrainerAssignmentOpen, setIsTrainerAssignmentOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<CourseSchedule | null>(null);
   const { toast } = useToast();
 
@@ -139,6 +140,11 @@ const CourseScheduleManagement = () => {
     setIsEnrolledListOpen(true);
   };
 
+  const handleAssignTrainers = (schedule: CourseSchedule) => {
+    setSelectedSchedule(schedule);
+    setIsTrainerAssignmentOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -182,6 +188,7 @@ const CourseScheduleManagement = () => {
                   onDuplicateSchedule={handleDuplicateSchedule}
                   onAssignStudents={handleAssignStudents}
                   onViewEnrolledStudents={handleViewEnrolledStudents}
+                  onAssignTrainers={handleAssignTrainers}
                 />
               )}
             </>
@@ -210,6 +217,14 @@ const CourseScheduleManagement = () => {
           <EnrolledStudentsList
             isOpen={isEnrolledListOpen}
             onClose={() => setIsEnrolledListOpen(false)}
+            scheduleId={selectedSchedule.id}
+            courseName={selectedSchedule.course?.course_title || 'Course'}
+          />
+
+          <TrainerAssignmentModal
+            isOpen={isTrainerAssignmentOpen}
+            onClose={() => setIsTrainerAssignmentOpen(false)}
+            onSuccess={loadSchedules}
             scheduleId={selectedSchedule.id}
             courseName={selectedSchedule.course?.course_title || 'Course'}
           />

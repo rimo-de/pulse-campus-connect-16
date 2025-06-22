@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Sidebar,
@@ -42,7 +43,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
   const { user } = useAuth();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['dashboard', 'courses']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['students', 'trainers', 'courses']);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => 
@@ -56,6 +57,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     {
       id: "dashboard",
       label: "Dashboard",
+      collapsible: false,
       items: [
         { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
       ]
@@ -63,13 +65,24 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     {
       id: "students",
       label: "Students",
+      collapsible: true,
       items: [
         { id: "maintain-students", title: "Maintain Students", icon: Users },
       ]
     },
     {
+      id: "trainers",
+      label: "Trainers",
+      collapsible: true,
+      items: [
+        { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
+        { id: "assigned-trainers", title: "Assigned Trainers", icon: Users },
+      ]
+    },
+    {
       id: "courses",
       label: "Courses",
+      collapsible: true,
       items: [
         { id: "create-course", title: "Maintain Course", icon: PlusCircle },
         { id: "course-schedule", title: "Course Schedule", icon: Calendar },
@@ -79,22 +92,16 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     {
       id: "administration",
       label: "Administration",
+      collapsible: true,
       items: [
         { id: "system-settings", title: "System Settings", icon: Settings },
         { id: "user-management", title: "User Management", icon: Users },
       ]
     },
     {
-      id: "trainers",
-      label: "Trainers",
-      items: [
-        { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
-        { id: "trainer-assignments", title: "Assignments", icon: Users },
-      ]
-    },
-    {
       id: "reporting",
       label: "Reporting",
+      collapsible: true,
       items: [
         { id: "analytics", title: "Analytics", icon: BarChart3 },
         { id: "completion-rates", title: "Completion Rates", icon: TrendingUp },
@@ -104,6 +111,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     {
       id: "events",
       label: "Events",
+      collapsible: true,
       items: [
         { id: "schedule-events", title: "Schedule Events", icon: Calendar },
         { id: "calendar-view", title: "Calendar View", icon: Clock },
@@ -112,6 +120,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     {
       id: "assets",
       label: "Assets",
+      collapsible: true,
       items: [
         { id: "manage-assets", title: "Manage Assets", icon: HardDrive },
         { id: "media-library", title: "Media Library", icon: FileImage },
@@ -139,6 +148,30 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
           const isExpanded = expandedGroups.includes(group.id);
           const hasActiveItem = group.items.some(item => item.id === activeSection);
           
+          if (!group.collapsible) {
+            // Non-collapsible groups (like Dashboard)
+            return (
+              <SidebarGroup key={group.id}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => onSectionChange(item.id)}
+                          isActive={activeSection === item.id}
+                          className="w-full justify-start"
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          }
+
           return (
             <SidebarGroup key={group.id}>
               <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(group.id)}>
