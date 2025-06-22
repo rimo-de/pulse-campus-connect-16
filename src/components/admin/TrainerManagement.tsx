@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,14 +13,12 @@ import {
   Trash2, 
   Mail, 
   Phone,
-  FileText,
-  Camera,
   Award
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
-import TrainerForm from './TrainerForm';
+import TrainerFormModal from './TrainerFormModal';
 import type { Trainer } from '@/types/trainer';
 import type { Course } from '@/types/course';
 
@@ -31,7 +30,7 @@ const TrainerManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('all');
   const [expertiseFilter, setExpertiseFilter] = useState('all');
-  const [showForm, setShowForm] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
   const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
   const { toast } = useToast();
 
@@ -86,12 +85,12 @@ const TrainerManagement = () => {
 
   const handleAddTrainer = () => {
     setEditingTrainer(null);
-    setShowForm(true);
+    setShowFormModal(true);
   };
 
   const handleEditTrainer = (trainer: Trainer) => {
     setEditingTrainer(trainer);
-    setShowForm(true);
+    setShowFormModal(true);
   };
 
   const handleDeleteTrainer = async (trainer: Trainer) => {
@@ -116,8 +115,6 @@ const TrainerManagement = () => {
   };
 
   const handleFormSuccess = () => {
-    setShowForm(false);
-    setEditingTrainer(null);
     loadData();
   };
 
@@ -130,26 +127,6 @@ const TrainerManagement = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-
-  if (showForm) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold edu-gradient-text mb-2">
-            {editingTrainer ? 'Edit Trainer' : 'Add New Trainer'}
-          </h1>
-          <p className="text-gray-600">
-            {editingTrainer ? 'Update trainer information' : 'Register a new trainer in the system'}
-          </p>
-        </div>
-        <TrainerForm
-          trainer={editingTrainer}
-          onSuccess={handleFormSuccess}
-          onCancel={() => setShowForm(false)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -276,6 +253,13 @@ const TrainerManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      <TrainerFormModal
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        trainer={editingTrainer}
+        onSuccess={handleFormSuccess}
+      />
     </div>
   );
 };

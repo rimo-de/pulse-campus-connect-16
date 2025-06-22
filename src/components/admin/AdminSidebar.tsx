@@ -76,7 +76,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       collapsible: true,
       items: [
         { id: "manage-trainers", title: "Manage Trainers", icon: GraduationCap },
-        { id: "assigned-trainers", title: "Assigned Trainers", icon: Users },
+        { id: "assigned-trainers", title: "Assigned Trainers", icon: UserCheck },
       ]
     },
     {
