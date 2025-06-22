@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, Copy, Calendar, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Copy, Calendar, Filter, Users, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { courseScheduleService } from '@/services/courseScheduleService';
 import { format } from 'date-fns';
 import CourseScheduleForm from './course-schedule/CourseScheduleForm';
 import CourseScheduleCalendar from './course-schedule/CourseScheduleCalendar';
+import StudentAssignmentModal from './course-schedule/StudentAssignmentModal';
+import EnrolledStudentsList from './course-schedule/EnrolledStudentsList';
 import type { CourseSchedule } from '@/types/course';
 
 const CourseScheduleManagement = () => {
@@ -24,6 +26,9 @@ const CourseScheduleManagement = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<CourseSchedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [isEnrolledListOpen, setIsEnrolledListOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<CourseSchedule | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,6 +84,14 @@ const CourseScheduleManagement = () => {
     setFilteredSchedules(filtered);
   };
 
+  useEffect(() => {
+    loadSchedules();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [schedules, searchTerm, statusFilter, monthFilter]);
+
   const handleAddSchedule = () => {
     setEditingSchedule(null);
     setIsFormOpen(true);
@@ -128,6 +141,16 @@ const CourseScheduleManagement = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleAssignStudents = (schedule: CourseSchedule) => {
+    setSelectedSchedule(schedule);
+    setIsAssignmentModalOpen(true);
+  };
+
+  const handleViewEnrolledStudents = (schedule: CourseSchedule) => {
+    setSelectedSchedule(schedule);
+    setIsEnrolledListOpen(true);
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -254,6 +277,7 @@ const CourseScheduleManagement = () => {
                         <TableHead>End Date</TableHead>
                         <TableHead>Duration</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Students</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -288,6 +312,28 @@ const CourseScheduleManagement = () => {
                             <Badge className={getStatusBadgeColor(schedule.status)}>
                               {schedule.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewEnrolledStudents(schedule)}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="View enrolled students"
+                              >
+                                <Users className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAssignStudents(schedule)}
+                                className="text-green-600 hover:text-green-700"
+                                title="Assign students"
+                              >
+                                <UserPlus className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
@@ -328,13 +374,32 @@ const CourseScheduleManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Schedule Form Modal */}
+      {/* Modals */}
       <CourseScheduleForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSuccess={loadSchedules}
         editingSchedule={editingSchedule}
       />
+
+      {selectedSchedule && (
+        <>
+          <StudentAssignmentModal
+            isOpen={isAssignmentModalOpen}
+            onClose={() => setIsAssignmentModalOpen(false)}
+            onSuccess={loadSchedules}
+            scheduleId={selectedSchedule.id}
+            courseName={selectedSchedule.course?.course_title || 'Course'}
+          />
+
+          <EnrolledStudentsList
+            isOpen={isEnrolledListOpen}
+            onClose={() => setIsEnrolledListOpen(false)}
+            scheduleId={selectedSchedule.id}
+            courseName={selectedSchedule.course?.course_title || 'Course'}
+          />
+        </>
+      )}
     </div>
   );
 };

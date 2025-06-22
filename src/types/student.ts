@@ -51,3 +51,15 @@ export interface CompleteStudent {
   created_at: string;
   updated_at: string;
 }
+
+// New StudentCourseAssignment interface
+export interface StudentCourseAssignment {
+  id: string;
+  student_id: string;
+  schedule_id: string;
+  enrollment_date: string;
+  status: 'enrolled' | 'completed' | 'dropped';
+  created_at: string;
+  updated_at: string;
+  student?: CompleteStudent;
+}
