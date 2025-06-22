@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -127,6 +126,144 @@ export const physicalAssetService = {
       }
     } catch (error) {
       console.error('Service error deleting asset:', error);
+      throw error;
+    }
+  },
+
+  async assignAsset(assignmentData: {
+    asset_id: string;
+    assigned_to_id: string;
+    assigned_to_type: string;
+    assigned_by?: string | null;
+    notes?: string | null;
+    schedule_id?: string;
+  }): Promise<void> {
+    try {
+      // First check if asset exists and is available
+      const { data: currentAsset, error: fetchError } = await supabase
+        .from('physical_assets')
+        .select('status, assigned_to_id, name')
+        .eq('id', assignmentData.asset_id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching asset for assignment:', fetchError);
+        throw new Error(`Failed to fetch asset: ${fetchError.message}`);
+      }
+
+      if (!currentAsset) {
+        throw new Error('Asset not found');
+      }
+
+      if (currentAsset.status !== 'available') {
+        throw new Error(`Asset is currently ${currentAsset.status} and cannot be assigned`);
+      }
+
+      // Create assignment record
+      const assignment: AssetAssignmentInsert = {
+        asset_id: assignmentData.asset_id,
+        assigned_to_id: assignmentData.assigned_to_id,
+        assigned_to_type: assignmentData.assigned_to_type,
+        assignment_date: new Date().toISOString(),
+        notes: assignmentData.notes || null,
+        assigned_by: assignmentData.assigned_by || null,
+        schedule_id: assignmentData.schedule_id || null
+      };
+
+      const { error: assignmentError } = await supabase
+        .from('asset_assignments')
+        .insert(assignment);
+
+      if (assignmentError) {
+        console.error('Error creating assignment:', assignmentError);
+        throw new Error(`Failed to create assignment: ${assignmentError.message}`);
+      }
+
+      // Update asset status and assignment info
+      const { error: updateError } = await supabase
+        .from('physical_assets')
+        .update({
+          status: 'rental_in_progress',
+          assigned_to_id: assignmentData.assigned_to_id,
+          assigned_to_type: assignmentData.assigned_to_type,
+          rental_start_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', assignmentData.asset_id);
+
+      if (updateError) {
+        console.error('Error updating asset after assignment:', updateError);
+        throw new Error(`Failed to update asset: ${updateError.message}`);
+      }
+    } catch (error) {
+      console.error('Service error assigning asset:', error);
+      throw error;
+    }
+  },
+
+  async assignAssetToCourse(assignmentData: {
+    asset_id: string;
+    assigned_to_id: string;
+    assigned_to_type: string;
+    assigned_by?: string | null;
+    notes?: string | null;
+    schedule_id: string;
+  }): Promise<void> {
+    try {
+      // Use the same logic as assignAsset but with course context
+      await this.assignAsset(assignmentData);
+    } catch (error) {
+      console.error('Service error assigning asset to course:', error);
+      throw error;
+    }
+  },
+
+  async getAssignmentHistory(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('asset_assignments')
+        .select(`
+          *,
+          physical_assets!inner(
+            id,
+            name,
+            serial_number
+          ),
+          course_schedules(
+            id,
+            start_date,
+            end_date,
+            courses(
+              course_title
+            )
+          )
+        `)
+        .order('assignment_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assignment history:', error);
+        throw new Error(`Failed to fetch assignment history: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Service error fetching assignment history:', error);
+      throw error;
+    }
+  },
+
+  async bulkUpdateAssetStatus(assetIds: string[], status: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('physical_assets')
+        .update({ status })
+        .in('id', assetIds);
+
+      if (error) {
+        console.error('Error bulk updating asset status:', error);
+        throw new Error(`Failed to bulk update asset status: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Service error bulk updating asset status:', error);
       throw error;
     }
   },
