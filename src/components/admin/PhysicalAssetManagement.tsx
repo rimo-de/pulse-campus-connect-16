@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 import PhysicalAssetForm from './PhysicalAssetForm';
 import EnhancedAssetAssignmentModal from './EnhancedAssetAssignmentModal';
+import StudentAssignmentModal from './StudentAssignmentModal';
 import AssetHistoryModal from './AssetHistoryModal';
 import AssetStatusDashboard from './AssetStatusDashboard';
 import type { Database } from '@/integrations/supabase/types';
@@ -25,6 +25,7 @@ const PhysicalAssetManagement = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<PhysicalAsset | null>(null);
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [studentAssignmentModalOpen, setStudentAssignmentModalOpen] = useState(false);
   const [selectedAssetForAssignment, setSelectedAssetForAssignment] = useState<PhysicalAsset | null>(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedAssetForHistory, setSelectedAssetForHistory] = useState<PhysicalAsset | null>(null);
@@ -99,6 +100,11 @@ const PhysicalAssetManagement = () => {
     setAssignmentModalOpen(true);
   };
 
+  const handleAssignToStudent = (asset: PhysicalAsset) => {
+    setSelectedAssetForAssignment(asset);
+    setStudentAssignmentModalOpen(true);
+  };
+
   const handleMarkReadyToReturn = async (asset: PhysicalAsset) => {
     try {
       await physicalAssetService.markAssetReadyToReturn(asset.id);
@@ -120,18 +126,12 @@ const PhysicalAssetManagement = () => {
     if (!confirm('Are you sure you want to mark this asset as returned?')) return;
 
     try {
-      // Get the latest assignment for this asset
-      const assignments = await physicalAssetService.getAssetAssignments(asset.id);
-      const activeAssignment = assignments.find(a => !a.return_date);
-      
-      if (activeAssignment) {
-        await physicalAssetService.returnAsset(asset.id, activeAssignment.id);
-        toast({
-          title: "Success",
-          description: "Asset marked as returned successfully",
-        });
-        loadAssets();
-      }
+      await physicalAssetService.returnAsset(asset.id);
+      toast({
+        title: "Success",
+        description: "Asset marked as returned successfully",
+      });
+      loadAssets();
     } catch (error) {
       toast({
         title: "Error",
@@ -206,6 +206,15 @@ const PhysicalAssetManagement = () => {
             size="sm"
             onClick={() => handleAssignAsset(asset)}
             className="text-green-600 hover:text-green-700"
+          >
+            <UserPlus className="w-4 h-4" />
+          </Button>,
+          <Button
+            key="assign-student"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAssignToStudent(asset)}
+            className="text-blue-600 hover:text-blue-700"
           >
             <UserPlus className="w-4 h-4" />
           </Button>
@@ -423,6 +432,13 @@ const PhysicalAssetManagement = () => {
       <EnhancedAssetAssignmentModal
         isOpen={assignmentModalOpen}
         onClose={() => setAssignmentModalOpen(false)}
+        onSuccess={loadAssets}
+        asset={selectedAssetForAssignment}
+      />
+
+      <StudentAssignmentModal
+        isOpen={studentAssignmentModalOpen}
+        onClose={() => setStudentAssignmentModalOpen(false)}
         onSuccess={loadAssets}
         asset={selectedAssetForAssignment}
       />
