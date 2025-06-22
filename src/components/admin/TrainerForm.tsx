@@ -22,8 +22,6 @@ interface TrainerFormProps {
 }
 
 const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
-  console.log('TrainerForm: Rendering with trainer:', trainer?.id || 'new trainer');
-  
   const [isLoading, setIsLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -39,7 +37,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       last_name: '',
       mobile_number: '',
       email: '',
-      expertise_area: undefined,
+      expertise_area: '',
       experience_level: 'Junior',
       profile_image_url: '',
       skills: [],
@@ -47,42 +45,35 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   });
 
   useEffect(() => {
-    console.log('TrainerForm: useEffect triggered, loading courses and setting form data');
     loadCourses();
     
     if (trainer) {
-      console.log('TrainerForm: Setting form values for existing trainer:', trainer.id);
       // Set form values for existing trainer
-      form.setValue('first_name', trainer.first_name || '');
-      form.setValue('last_name', trainer.last_name || '');
-      form.setValue('mobile_number', trainer.mobile_number || '');
-      form.setValue('email', trainer.email || '');
-      form.setValue('expertise_area', trainer.expertise_area || undefined);
-      form.setValue('experience_level', trainer.experience_level as 'Junior' | 'Mid-Level' | 'Senior' | 'Expert');
-      form.setValue('profile_image_url', trainer.profile_image_url || '');
+      form.reset({
+        first_name: trainer.first_name || '',
+        last_name: trainer.last_name || '',
+        mobile_number: trainer.mobile_number || '',
+        email: trainer.email || '',
+        expertise_area: trainer.expertise_area || '',
+        experience_level: trainer.experience_level as 'Junior' | 'Mid-Level' | 'Senior' | 'Expert',
+        profile_image_url: trainer.profile_image_url || '',
+        skills: trainer.trainer_skills?.map(skill => skill.skill) || [],
+      });
       
       // Set profile image preview
       setImagePreview(trainer.profile_image_url || null);
       
       // Load existing skills
-      if (trainer.trainer_skills && trainer.trainer_skills.length > 0) {
-        const existingSkills = trainer.trainer_skills.map(skill => skill.skill);
-        console.log('TrainerForm: Setting existing skills:', existingSkills);
-        setSkills(existingSkills);
-        form.setValue('skills', existingSkills);
-      } else {
-        setSkills([]);
-        form.setValue('skills', []);
-      }
+      const existingSkills = trainer.trainer_skills?.map(skill => skill.skill) || [];
+      setSkills(existingSkills);
     } else {
-      console.log('TrainerForm: Resetting form for new trainer');
-      // Reset form for new trainer
+      // Reset for new trainer
       form.reset({
         first_name: '',
         last_name: '',
         mobile_number: '',
         email: '',
-        expertise_area: undefined,
+        expertise_area: '',
         experience_level: 'Junior',
         profile_image_url: '',
         skills: [],
@@ -95,12 +86,10 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
 
   const loadCourses = async () => {
     try {
-      console.log('TrainerForm: Loading courses...');
       const data = await courseService.getAllCourses();
-      console.log('TrainerForm: Courses loaded successfully:', data.length);
       setCourses(data);
     } catch (error) {
-      console.error('TrainerForm: Failed to load courses:', error);
+      console.error('Failed to load courses:', error);
       toast({
         title: "Error",
         description: "Failed to load courses",
@@ -112,7 +101,6 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log('TrainerForm: Image file selected:', file.name);
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -126,7 +114,6 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
     if (!imageFile) return null;
 
     try {
-      console.log('TrainerForm: Uploading image...');
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `trainer-images/${fileName}`;
@@ -136,7 +123,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         .upload(filePath, imageFile);
 
       if (uploadError) {
-        console.error('TrainerForm: Error uploading image:', uploadError);
+        console.error('Error uploading image:', uploadError);
         return null;
       }
 
@@ -144,10 +131,9 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         .from('trainer-files')
         .getPublicUrl(filePath);
 
-      console.log('TrainerForm: Image uploaded successfully:', data.publicUrl);
       return data.publicUrl;
     } catch (error) {
-      console.error('TrainerForm: Error uploading image:', error);
+      console.error('Error uploading image:', error);
       return null;
     }
   };
@@ -155,7 +141,6 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   const addSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
       const updatedSkills = [...skills, newSkill.trim()];
-      console.log('TrainerForm: Adding skill:', newSkill.trim());
       setSkills(updatedSkills);
       form.setValue('skills', updatedSkills);
       setNewSkill('');
@@ -164,13 +149,11 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
 
   const removeSkill = (skillToRemove: string) => {
     const updatedSkills = skills.filter(skill => skill !== skillToRemove);
-    console.log('TrainerForm: Removing skill:', skillToRemove);
     setSkills(updatedSkills);
     form.setValue('skills', updatedSkills);
   };
 
   const onSubmit = async (data: TrainerFormData) => {
-    console.log('TrainerForm: Submitting form with data:', data);
     setIsLoading(true);
     
     try {
@@ -184,26 +167,29 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         }
       }
 
+      const submitData = {
+        ...data,
+        expertise_area: data.expertise_area || null,
+        skills
+      };
+
       if (trainer) {
-        console.log('TrainerForm: Updating existing trainer:', trainer.id);
-        await TrainerService.updateTrainer(trainer.id, { ...data, skills });
+        await TrainerService.updateTrainer(trainer.id, submitData);
         toast({
           title: "Success",
           description: "Trainer updated successfully",
         });
       } else {
-        console.log('TrainerForm: Creating new trainer');
-        await TrainerService.createTrainer({ ...data, skills });
+        await TrainerService.createTrainer(submitData);
         toast({
           title: "Success",
           description: "Trainer created successfully",
         });
       }
       
-      console.log('TrainerForm: Operation successful, calling onSuccess');
       onSuccess();
     } catch (error: any) {
-      console.error('TrainerForm: Error saving trainer:', error);
+      console.error('Error saving trainer:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save trainer",
