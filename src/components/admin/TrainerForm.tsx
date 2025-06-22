@@ -49,7 +49,14 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   useEffect(() => {
     console.log('TrainerForm: Loading courses...');
     loadCourses();
-  }, []);
+    
+    // Load existing skills if editing trainer
+    if (trainer?.trainer_skills) {
+      const existingSkills = trainer.trainer_skills.map(skill => skill.skill);
+      setSkills(existingSkills);
+      form.setValue('skills', existingSkills);
+    }
+  }, [trainer]);
 
   const loadCourses = async () => {
     try {
@@ -287,7 +294,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Primary Expertise Area</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select expertise area" />
@@ -308,9 +315,9 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
           />
         </div>
 
-        {/* Skills Section - Note for future implementation */}
+        {/* Skills Section */}
         <div className="space-y-4">
-          <FormLabel>Skills & Specializations (Preview - Full functionality coming soon)</FormLabel>
+          <FormLabel>Skills & Specializations</FormLabel>
           <div className="flex flex-wrap gap-2 mb-4">
             {skills.map((skill, index) => (
               <Badge key={index} variant="secondary" className="flex items-center space-x-1">
@@ -336,9 +343,6 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-sm text-gray-500">
-            Skills functionality will be fully available once the database tables are properly set up.
-          </p>
         </div>
 
         <div className="flex justify-end space-x-4 pt-6 border-t">

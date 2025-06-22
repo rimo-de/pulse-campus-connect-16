@@ -379,6 +379,44 @@ export type Database = {
           },
         ]
       }
+      trainer_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_documents_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trainer_files: {
         Row: {
           created_at: string
@@ -420,6 +458,38 @@ export type Database = {
           },
         ]
       }
+      trainer_skills: {
+        Row: {
+          created_at: string
+          id: string
+          skill: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          skill: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          skill?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_skills_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trainers: {
         Row: {
           created_at: string
@@ -430,6 +500,7 @@ export type Database = {
           id: string
           last_name: string
           mobile_number: string | null
+          profile_image_url: string | null
           updated_at: string
         }
         Insert: {
@@ -441,6 +512,7 @@ export type Database = {
           id?: string
           last_name: string
           mobile_number?: string | null
+          profile_image_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -452,6 +524,7 @@ export type Database = {
           id?: string
           last_name?: string
           mobile_number?: string | null
+          profile_image_url?: string | null
           updated_at?: string
         }
         Relationships: [

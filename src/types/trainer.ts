@@ -17,7 +17,7 @@ export const trainerSchema = z.object({
 
 export type TrainerFormData = z.infer<typeof trainerSchema>;
 
-// Trainer skill interface (for future use)
+// Trainer skill interface
 export interface TrainerSkill {
   id: string;
   trainer_id: string;
@@ -26,7 +26,7 @@ export interface TrainerSkill {
   updated_at: string;
 }
 
-// Trainer document interface (for future use)
+// Trainer document interface
 export interface TrainerDocument {
   id: string;
   trainer_id: string;

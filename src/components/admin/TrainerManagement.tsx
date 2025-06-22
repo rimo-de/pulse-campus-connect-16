@@ -20,19 +20,19 @@ import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import TrainerFormModal from './TrainerFormModal';
 import TrainerAvatar from './TrainerAvatar';
-import type { Trainer } from '@/types/trainer';
+import type { TrainerWithFiles } from '@/types/trainer';
 import type { Course } from '@/types/course';
 
 const TrainerManagement = () => {
-  const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [trainers, setTrainers] = useState<TrainerWithFiles[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredTrainers, setFilteredTrainers] = useState<Trainer[]>([]);
+  const [filteredTrainers, setFilteredTrainers] = useState<TrainerWithFiles[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('all');
   const [expertiseFilter, setExpertiseFilter] = useState('all');
   const [showFormModal, setShowFormModal] = useState(false);
-  const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
+  const [editingTrainer, setEditingTrainer] = useState<TrainerWithFiles | null>(null);
   const { toast } = useToast();
 
   console.log('TrainerManagement: Component rendered, showFormModal:', showFormModal);
@@ -95,13 +95,13 @@ const TrainerManagement = () => {
     setShowFormModal(true);
   };
 
-  const handleEditTrainer = (trainer: Trainer) => {
+  const handleEditTrainer = (trainer: TrainerWithFiles) => {
     console.log('TrainerManagement: Edit trainer clicked for:', trainer.id);
     setEditingTrainer(trainer);
     setShowFormModal(true);
   };
 
-  const handleDeleteTrainer = async (trainer: Trainer) => {
+  const handleDeleteTrainer = async (trainer: TrainerWithFiles) => {
     console.log('TrainerManagement: Delete trainer clicked for:', trainer.id);
     if (!confirm(`Are you sure you want to delete ${trainer.first_name} ${trainer.last_name}?`)) {
       return;
@@ -253,7 +253,7 @@ const TrainerManagement = () => {
                           )}
                         </div>
 
-                        {/* Skills placeholder - will be functional once database tables are set up */}
+                        {/* Skills display */}
                         {trainer.trainer_skills && trainer.trainer_skills.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-2">
                             {trainer.trainer_skills.slice(0, 5).map((skill, index) => (

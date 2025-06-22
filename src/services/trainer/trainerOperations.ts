@@ -11,7 +11,9 @@ export const trainerOperations = {
         expertise_course:courses (
           course_title
         ),
-        trainer_files (*)
+        trainer_files (*),
+        trainer_skills (*),
+        trainer_documents (*)
       `, { count: 'exact' })
       .order('created_at', { ascending: false });
 
@@ -20,23 +22,17 @@ export const trainerOperations = {
       throw new Error('Failed to fetch trainers');
     }
 
-    // Type assertion with proper casting - simplified for current schema
     const trainers = (data || []).map(trainer => ({
       ...trainer,
-      trainer_files: (trainer.trainer_files || []).map((file: any) => ({
-        ...file,
-        file_type: file.file_type as 'Profile' | 'Photo' | 'Certificate'
-      })),
-      // Add empty arrays for features that will be added later
-      trainer_skills: [],
-      trainer_documents: []
+      trainer_files: trainer.trainer_files || [],
+      trainer_skills: trainer.trainer_skills || [],
+      trainer_documents: trainer.trainer_documents || []
     })) as TrainerWithFiles[];
 
     return { data: trainers, count: count || 0 };
   },
 
   async createTrainer(trainerData: TrainerFormData & { skills?: string[] }): Promise<Trainer> {
-    // Create the trainer without skills for now (until tables are properly created)
     const { data: trainer, error: trainerError } = await supabase
       .from('trainers')
       .insert({
@@ -56,8 +52,21 @@ export const trainerOperations = {
       throw new Error('Failed to create trainer');
     }
 
-    // TODO: Add skills handling once trainer_skills table is properly created
-    console.log('Skills will be added once trainer_skills table is available:', trainerData.skills);
+    // Add skills if provided
+    if (trainerData.skills && trainerData.skills.length > 0) {
+      const skillsData = trainerData.skills.map(skill => ({
+        trainer_id: trainer.id,
+        skill: skill
+      }));
+
+      const { error: skillsError } = await supabase
+        .from('trainer_skills')
+        .insert(skillsData);
+
+      if (skillsError) {
+        console.error('Error adding trainer skills:', skillsError);
+      }
+    }
 
     return trainer as Trainer;
   },
@@ -85,8 +94,30 @@ export const trainerOperations = {
       throw new Error('Failed to update trainer');
     }
 
-    // TODO: Add skills handling once trainer_skills table is properly created
-    console.log('Skills will be updated once trainer_skills table is available:', trainerData.skills);
+    // Update skills if provided
+    if (trainerData.skills !== undefined) {
+      // First, remove existing skills
+      await supabase
+        .from('trainer_skills')
+        .delete()
+        .eq('trainer_id', id);
+
+      // Then add new skills
+      if (trainerData.skills.length > 0) {
+        const skillsData = trainerData.skills.map(skill => ({
+          trainer_id: id,
+          skill: skill
+        }));
+
+        const { error: skillsError } = await supabase
+          .from('trainer_skills')
+          .insert(skillsData);
+
+        if (skillsError) {
+          console.error('Error updating trainer skills:', skillsError);
+        }
+      }
+    }
 
     return data as Trainer;
   },
