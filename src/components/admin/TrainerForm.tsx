@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -384,14 +383,14 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Primary Expertise Area</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ''}>
+                <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select expertise area" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No specific expertise</SelectItem>
+                    <SelectItem value="none">No specific expertise</SelectItem>
                     {courses.map((course) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.course_title}

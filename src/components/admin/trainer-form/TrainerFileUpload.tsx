@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +37,7 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
         .from('trainer-files')
         .getPublicUrl(filePath);
 
-      const documentData = {
+      const documentData: TrainerDocument = {
         id: crypto.randomUUID(),
         trainer_id: trainerId || '',
         file_name: file.name,
@@ -65,7 +64,7 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
       }
 
       // Return temporary document for new trainers
-      return documentData as TrainerDocument;
+      return documentData;
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
