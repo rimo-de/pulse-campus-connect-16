@@ -18,7 +18,7 @@ interface TrainerFormModalProps {
 }
 
 const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormModalProps) => {
-  console.log('TrainerFormModal rendered with:', { isOpen, trainer: trainer?.id });
+  console.log('TrainerFormModal: Rendering with:', { isOpen, trainerId: trainer?.id || 'new' });
 
   const handleSuccess = () => {
     console.log('TrainerFormModal: Success callback triggered');
@@ -27,8 +27,8 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
   };
 
   const handleOpenChange = (open: boolean) => {
+    console.log('TrainerFormModal: Open state changed to:', open);
     if (!open) {
-      console.log('TrainerFormModal: Dialog closed');
       onClose();
     }
   };
@@ -45,10 +45,12 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
           </DialogDescription>
         </DialogHeader>
         
-        <TrainerForm
-          trainer={trainer}
-          onSuccess={handleSuccess}
-        />
+        {isOpen && (
+          <TrainerForm
+            trainer={trainer}
+            onSuccess={handleSuccess}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

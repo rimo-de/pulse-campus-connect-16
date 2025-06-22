@@ -35,25 +35,27 @@ const TrainerManagement = () => {
   const [editingTrainer, setEditingTrainer] = useState<TrainerWithFiles | null>(null);
   const { toast } = useToast();
 
-  console.log('TrainerManagement: Component rendered, showFormModal:', showFormModal);
+  console.log('TrainerManagement: Component rendered, modal state:', showFormModal);
 
   useEffect(() => {
+    console.log('TrainerManagement: Initial data load');
     loadData();
   }, []);
 
   useEffect(() => {
+    console.log('TrainerManagement: Filtering trainers, total:', trainers.length);
     filterTrainers();
   }, [trainers, searchTerm, experienceFilter, expertiseFilter]);
 
   const loadData = async () => {
     try {
-      console.log('TrainerManagement: Loading data...');
+      console.log('TrainerManagement: Starting data load...');
       setIsLoading(true);
       const [trainerData, courseData] = await Promise.all([
         TrainerService.getAllTrainers(),
         courseService.getAllCourses()
       ]);
-      console.log('TrainerManagement: Data loaded - trainers:', trainerData.data.length, 'courses:', courseData.length);
+      console.log('TrainerManagement: Data loaded successfully - trainers:', trainerData.data.length, 'courses:', courseData.length);
       setTrainers(trainerData.data);
       setCourses(courseData);
     } catch (error) {
@@ -86,23 +88,24 @@ const TrainerManagement = () => {
       filtered = filtered.filter(trainer => trainer.expertise_area === expertiseFilter);
     }
 
+    console.log('TrainerManagement: Filtered trainers:', filtered.length);
     setFilteredTrainers(filtered);
   };
 
   const handleAddTrainer = () => {
-    console.log('TrainerManagement: Add trainer clicked');
+    console.log('TrainerManagement: Opening modal for new trainer');
     setEditingTrainer(null);
     setShowFormModal(true);
   };
 
   const handleEditTrainer = (trainer: TrainerWithFiles) => {
-    console.log('TrainerManagement: Edit trainer clicked for:', trainer.id);
+    console.log('TrainerManagement: Opening modal for editing trainer:', trainer.id);
     setEditingTrainer(trainer);
     setShowFormModal(true);
   };
 
   const handleDeleteTrainer = async (trainer: TrainerWithFiles) => {
-    console.log('TrainerManagement: Delete trainer clicked for:', trainer.id);
+    console.log('TrainerManagement: Delete trainer requested for:', trainer.id);
     if (!confirm(`Are you sure you want to delete ${trainer.first_name} ${trainer.last_name}?`)) {
       return;
     }
@@ -125,14 +128,14 @@ const TrainerManagement = () => {
   };
 
   const handleFormSuccess = () => {
-    console.log('TrainerManagement: Form success callback triggered');
+    console.log('TrainerManagement: Form success - refreshing data and closing modal');
     setShowFormModal(false);
     setEditingTrainer(null);
     loadData();
   };
 
   const handleCloseModal = () => {
-    console.log('TrainerManagement: Close modal triggered');
+    console.log('TrainerManagement: Closing modal');
     setShowFormModal(false);
     setEditingTrainer(null);
   };
@@ -296,14 +299,12 @@ const TrainerManagement = () => {
         </CardContent>
       </Card>
 
-      {showFormModal && (
-        <TrainerFormModal
-          isOpen={showFormModal}
-          onClose={handleCloseModal}
-          trainer={editingTrainer}
-          onSuccess={handleFormSuccess}
-        />
-      )}
+      <TrainerFormModal
+        isOpen={showFormModal}
+        onClose={handleCloseModal}
+        trainer={editingTrainer}
+        onSuccess={handleFormSuccess}
+      />
     </div>
   );
 };
