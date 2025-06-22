@@ -161,7 +161,7 @@ const PhysicalAssetForm = ({ isOpen, onClose, onSuccess, editingAsset }: Physica
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="available">Available</SelectItem>
-                      <SelectItem value="rental_in_progress">Rental in Progress</SelectItem>
+                      <SelectItem value="assigned">Assigned</SelectItem>
                       <SelectItem value="ready_to_return">Ready to Return</SelectItem>
                       <SelectItem value="returned">Returned</SelectItem>
                       <SelectItem value="maintenance">Maintenance</SelectItem>

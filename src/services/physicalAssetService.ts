@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -151,7 +152,7 @@ export const physicalAssetService = {
       const { error: updateError } = await supabase
         .from('physical_assets')
         .update({
-          status: 'rental_in_progress',
+          status: 'assigned',
           assigned_to_id: assignmentData.assigned_to_id,
           assigned_to_type: assignmentData.assigned_to_type,
           rental_start_date: new Date().toISOString().split('T')[0]
@@ -280,7 +281,7 @@ export const physicalAssetService = {
       const { error: updateError } = await supabase
         .from('physical_assets')
         .update({
-          status: 'rental_in_progress',
+          status: 'assigned',
           assigned_to_id: studentId,
           assigned_to_type: 'student',
           rental_start_date: new Date().toISOString().split('T')[0]
@@ -384,6 +385,26 @@ export const physicalAssetService = {
 
   async markAssetReadyToReturn(assetId: string): Promise<void> {
     try {
+      // First verify the asset is currently assigned
+      const { data: currentAsset, error: fetchError } = await supabase
+        .from('physical_assets')
+        .select('status, name')
+        .eq('id', assetId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching asset for ready to return:', fetchError);
+        throw new Error(`Failed to fetch asset: ${fetchError.message}`);
+      }
+
+      if (!currentAsset) {
+        throw new Error('Asset not found');
+      }
+
+      if (currentAsset.status !== 'assigned') {
+        throw new Error(`Asset must be assigned before marking as ready to return. Current status: ${currentAsset.status}`);
+      }
+
       const { error } = await supabase
         .from('physical_assets')
         .update({ status: 'ready_to_return' })

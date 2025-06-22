@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -236,7 +237,7 @@ const PhysicalAssetManagement = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available': return 'bg-green-100 text-green-800';
-      case 'rental_in_progress': return 'bg-blue-100 text-blue-800';
+      case 'assigned': return 'bg-blue-100 text-blue-800';
       case 'ready_to_return': return 'bg-yellow-100 text-yellow-800';
       case 'returned': return 'bg-gray-100 text-gray-800';
       case 'maintenance': return 'bg-orange-100 text-orange-800';
@@ -320,7 +321,7 @@ const PhysicalAssetManagement = () => {
 
     // Status-specific action buttons
     switch (asset.status) {
-      case 'rental_in_progress':
+      case 'assigned':
         buttons.push(
           <Button
             key="ready-return"
@@ -438,7 +439,7 @@ const PhysicalAssetManagement = () => {
                 >
                   <option value="all">All Statuses</option>
                   <option value="available">Available</option>
-                  <option value="rental_in_progress">In Progress</option>
+                  <option value="assigned">Assigned</option>
                   <option value="ready_to_return">Ready to Return</option>
                   <option value="returned">Returned</option>
                   <option value="maintenance">Maintenance</option>
@@ -506,7 +507,7 @@ const PhysicalAssetManagement = () => {
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(asset.status)}>
-                              {asset.status.replace('_', ' ').toUpperCase()}
+                              {asset.status === 'assigned' ? 'ASSIGNED' : asset.status.replace('_', ' ').toUpperCase()}
                             </Badge>
                           </TableCell>
                           <TableCell>
