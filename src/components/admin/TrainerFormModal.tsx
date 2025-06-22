@@ -48,7 +48,6 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
         <TrainerForm
           trainer={trainer}
           onSuccess={handleSuccess}
-          onCancel={onClose}
         />
       </DialogContent>
     </Dialog>
