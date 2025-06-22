@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StudentService } from '@/services/studentService';
 import { courseService } from '@/services/courseService';
 import { TrainerService } from '@/services/trainerService';
+import { physicalAssetService } from '@/services/physicalAssetService';
 import DashboardStats from './DashboardStats';
 import RecentActivity from './RecentActivity';
 
@@ -10,6 +11,7 @@ const DashboardOverview = () => {
   const [studentCount, setStudentCount] = useState(0);
   const [courseCount, setCourseCount] = useState(0);
   const [trainerCount, setTrainerCount] = useState(0);
+  const [assetCount, setAssetCount] = useState(0);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -25,6 +27,10 @@ const DashboardOverview = () => {
         // Fetch trainer count
         const trainersResult = await TrainerService.getAllTrainers();
         setTrainerCount(trainersResult.data.length);
+
+        // Fetch asset count
+        const assetsResult = await physicalAssetService.getAllAssets();
+        setAssetCount(assetsResult.length);
       } catch (error) {
         console.error('Error fetching counts:', error);
       }
@@ -44,6 +50,7 @@ const DashboardOverview = () => {
         studentCount={studentCount} 
         courseCount={courseCount} 
         trainerCount={trainerCount}
+        assetCount={assetCount}
       />
       <RecentActivity />
     </div>

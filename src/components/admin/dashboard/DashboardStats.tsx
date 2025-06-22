@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, BookOpen, UserPlus, TrendingUp } from 'lucide-react';
+import { Users, BookOpen, UserPlus, Package } from 'lucide-react';
 
 interface DashboardStatsProps {
   studentCount: number;
   courseCount: number;
   trainerCount: number;
+  assetCount?: number;
 }
 
-const DashboardStats = ({ studentCount, courseCount, trainerCount }: DashboardStatsProps) => {
+const DashboardStats = ({ studentCount, courseCount, trainerCount, assetCount = 0 }: DashboardStatsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card className="edu-card hover-scale">
@@ -52,10 +53,10 @@ const DashboardStats = ({ studentCount, courseCount, trainerCount }: DashboardSt
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Growth Rate</p>
-              <p className="text-2xl font-bold text-gray-900">+15%</p>
+              <p className="text-sm font-medium text-gray-600">Physical Assets</p>
+              <p className="text-2xl font-bold text-gray-900">{assetCount}</p>
             </div>
-            <TrendingUp className="w-8 h-8 text-orange-600" />
+            <Package className="w-8 h-8 text-orange-600" />
           </div>
         </CardContent>
       </Card>

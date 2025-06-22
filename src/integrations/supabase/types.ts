@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      asset_assignments: {
+        Row: {
+          asset_id: string
+          assigned_by: string | null
+          assigned_to_id: string
+          assigned_to_type: string
+          assignment_date: string
+          created_at: string
+          id: string
+          notes: string | null
+          return_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          assigned_by?: string | null
+          assigned_to_id: string
+          assigned_to_type: string
+          assignment_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          return_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          assigned_by?: string | null
+          assigned_to_id?: string
+          assigned_to_type?: string
+          assignment_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          return_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "physical_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assets: {
         Row: {
           category: string | null
@@ -257,6 +304,51 @@ export type Database = {
           delivery_type?: string
           id?: string
           name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      physical_assets: {
+        Row: {
+          assigned_to_id: string | null
+          assigned_to_type: string | null
+          created_at: string
+          id: string
+          name: string
+          order_number: string | null
+          price_per_month: number | null
+          rental_end_date: string | null
+          rental_start_date: string | null
+          serial_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_id?: string | null
+          assigned_to_type?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          order_number?: string | null
+          price_per_month?: number | null
+          rental_end_date?: string | null
+          rental_start_date?: string | null
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_id?: string | null
+          assigned_to_type?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          order_number?: string | null
+          price_per_month?: number | null
+          rental_end_date?: string | null
+          rental_start_date?: string | null
+          serial_number?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
