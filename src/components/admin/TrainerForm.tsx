@@ -26,7 +26,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [skills, setSkills] = useState<string[]>(trainer?.trainer_skills?.map(s => s.skill) || []);
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(trainer?.profile_image_url || null);
@@ -308,9 +308,9 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
           />
         </div>
 
-        {/* Skills Section */}
+        {/* Skills Section - Note for future implementation */}
         <div className="space-y-4">
-          <FormLabel>Skills & Specializations</FormLabel>
+          <FormLabel>Skills & Specializations (Preview - Full functionality coming soon)</FormLabel>
           <div className="flex flex-wrap gap-2 mb-4">
             {skills.map((skill, index) => (
               <Badge key={index} variant="secondary" className="flex items-center space-x-1">
@@ -336,6 +336,9 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
               <Plus className="w-4 h-4" />
             </Button>
           </div>
+          <p className="text-sm text-gray-500">
+            Skills functionality will be fully available once the database tables are properly set up.
+          </p>
         </div>
 
         <div className="flex justify-end space-x-4 pt-6 border-t">

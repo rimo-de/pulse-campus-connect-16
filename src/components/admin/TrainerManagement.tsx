@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -252,6 +253,7 @@ const TrainerManagement = () => {
                           )}
                         </div>
 
+                        {/* Skills placeholder - will be functional once database tables are set up */}
                         {trainer.trainer_skills && trainer.trainer_skills.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-2">
                             {trainer.trainer_skills.slice(0, 5).map((skill, index) => (

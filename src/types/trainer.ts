@@ -1,3 +1,4 @@
+
 import * as z from 'zod';
 
 // Base trainer schema
@@ -16,7 +17,7 @@ export const trainerSchema = z.object({
 
 export type TrainerFormData = z.infer<typeof trainerSchema>;
 
-// Trainer skill interface
+// Trainer skill interface (for future use)
 export interface TrainerSkill {
   id: string;
   trainer_id: string;
@@ -25,7 +26,7 @@ export interface TrainerSkill {
   updated_at: string;
 }
 
-// Trainer document interface
+// Trainer document interface (for future use)
 export interface TrainerDocument {
   id: string;
   trainer_id: string;
@@ -55,7 +56,7 @@ export interface Trainer {
   trainer_documents?: TrainerDocument[];
 }
 
-// Trainer file interface (keeping for backward compatibility)
+// Trainer file interface (current database structure)
 export interface TrainerFile {
   id: string;
   trainer_id: string;
@@ -67,7 +68,7 @@ export interface TrainerFile {
   updated_at: string;
 }
 
-// Complete trainer with files
+// Complete trainer with files (current database structure)
 export interface TrainerWithFiles extends Trainer {
   trainer_files: TrainerFile[];
 }
