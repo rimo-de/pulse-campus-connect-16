@@ -92,8 +92,13 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
     }
   };
 
+  const handleCancel = () => {
+    console.log('TrainerForm: Cancel clicked');
+    onCancel();
+  };
+
   return (
-    <div className="p-6 bg-white">
+    <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -159,13 +164,13 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Experience Level *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select experience level" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white border shadow-lg z-50">
+                    <SelectContent>
                       <SelectItem value="Junior">Junior</SelectItem>
                       <SelectItem value="Mid-Level">Mid-Level</SelectItem>
                       <SelectItem value="Senior">Senior</SelectItem>
@@ -183,13 +188,13 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expertise Area</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select expertise area" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white border shadow-lg z-50">
+                    <SelectContent>
                       <SelectItem value="">No specific expertise</SelectItem>
                       {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
@@ -208,16 +213,14 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={onCancel} 
+              onClick={handleCancel} 
               disabled={isLoading}
-              className="px-6"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
-              className="px-6"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">

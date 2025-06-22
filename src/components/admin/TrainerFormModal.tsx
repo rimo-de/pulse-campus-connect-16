@@ -1,11 +1,12 @@
 
 import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import TrainerForm from './TrainerForm';
 import type { Trainer } from '@/types/trainer';
 
@@ -25,28 +26,32 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
     onClose();
   };
 
-  const handleClose = () => {
-    console.log('TrainerFormModal: Close callback triggered');
-    onClose();
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      console.log('TrainerFormModal: Dialog closed');
+      onClose();
+    }
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={handleClose}>
-      <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl font-semibold">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
             {trainer ? 'Edit Trainer' : 'Add New Trainer'}
-          </AlertDialogTitle>
-        </AlertDialogHeader>
-        <div className="mt-4">
-          <TrainerForm
-            trainer={trainer}
-            onSuccess={handleSuccess}
-            onCancel={handleClose}
-          />
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
+          </DialogTitle>
+          <DialogDescription>
+            {trainer ? 'Update trainer information and settings.' : 'Create a new trainer profile with their details and expertise.'}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <TrainerForm
+          trainer={trainer}
+          onSuccess={handleSuccess}
+          onCancel={onClose}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
