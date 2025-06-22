@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -73,6 +72,83 @@ export const physicalAssetService = {
     if (error) throw error;
   },
 
+  async assignAssetToStudent(assetId: string, studentId: string): Promise<void> {
+    // Create assignment record
+    const assignment: AssetAssignmentInsert = {
+      asset_id: assetId,
+      assigned_to_id: studentId,
+      assigned_to_type: 'student',
+      assignment_date: new Date().toISOString()
+    };
+
+    const { error: assignmentError } = await supabase
+      .from('asset_assignments')
+      .insert(assignment);
+
+    if (assignmentError) throw assignmentError;
+
+    // Update asset status and assignment info
+    await this.updateAsset(assetId, {
+      status: 'rental_in_progress',
+      assigned_to_id: studentId,
+      assigned_to_type: 'student',
+      rental_start_date: new Date().toISOString().split('T')[0]
+    });
+  },
+
+  async returnAsset(assetId: string): Promise<void> {
+    // Get current assignment
+    const { data: assignments, error: fetchError } = await supabase
+      .from('asset_assignments')
+      .select('*')
+      .eq('asset_id', assetId)
+      .is('return_date', null)
+      .order('assignment_date', { ascending: false })
+      .limit(1);
+
+    if (fetchError) throw fetchError;
+
+    if (assignments && assignments.length > 0) {
+      // Update assignment with return date
+      const { error: assignmentError } = await supabase
+        .from('asset_assignments')
+        .update({ return_date: new Date().toISOString() })
+        .eq('id', assignments[0].id);
+
+      if (assignmentError) throw assignmentError;
+    }
+
+    // Update asset status to available
+    await this.updateAsset(assetId, {
+      status: 'available',
+      assigned_to_id: null,
+      assigned_to_type: null,
+      rental_start_date: null,
+      rental_end_date: new Date().toISOString().split('T')[0]
+    });
+  },
+
+  async getAvailableStudents(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('student_headers')
+      .select('id, first_name, last_name, email')
+      .order('first_name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getStudentById(studentId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('student_headers')
+      .select('id, first_name, last_name, email')
+      .eq('id', studentId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async assignAsset(assignment: AssetAssignmentInsert): Promise<void> {
     const { error } = await supabase
       .from('asset_assignments')
@@ -109,29 +185,6 @@ export const physicalAssetService = {
     await this.updateAsset(assetId, {
       status: 'ready_to_return'
     });
-  },
-
-  async returnAsset(assetId: string, assignmentId: string): Promise<void> {
-    // Update assignment with return date
-    const { error: assignmentError } = await supabase
-      .from('asset_assignments')
-      .update({ return_date: new Date().toISOString() })
-      .eq('id', assignmentId);
-
-    if (assignmentError) throw assignmentError;
-
-    // Update asset status to returned
-    const { error: assetError } = await supabase
-      .from('physical_assets')
-      .update({
-        status: 'returned',
-        assigned_to_id: null,
-        assigned_to_type: null,
-        rental_end_date: new Date().toISOString().split('T')[0]
-      })
-      .eq('id', assetId);
-
-    if (assetError) throw assetError;
   },
 
   async markAssetAsAvailable(assetId: string): Promise<void> {
