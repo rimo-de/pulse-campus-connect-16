@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { trainerSchema, type TrainerFormData, type Trainer } from '@/types/trainer';
-import { trainerService } from '@/services/trainerService';
+import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import type { Course } from '@/types/course';
 
@@ -57,13 +56,13 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
     setIsLoading(true);
     try {
       if (trainer) {
-        await trainerService.updateTrainer(trainer.id, data);
+        await TrainerService.updateTrainer(trainer.id, data);
         toast({
           title: "Success",
           description: "Trainer updated successfully",
         });
       } else {
-        await trainerService.createTrainer(data);
+        await TrainerService.createTrainer(data);
         toast({
           title: "Success",
           description: "Trainer created successfully",

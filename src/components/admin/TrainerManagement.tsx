@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
   Award
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { trainerService } from '@/services/trainerService';
+import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import TrainerForm from './TrainerForm';
 import type { Trainer } from '@/types/trainer';
@@ -48,10 +47,10 @@ const TrainerManagement = () => {
     try {
       setIsLoading(true);
       const [trainerData, courseData] = await Promise.all([
-        trainerService.getAllTrainers(),
+        TrainerService.getAllTrainers(),
         courseService.getAllCourses()
       ]);
-      setTrainers(trainerData);
+      setTrainers(trainerData.data);
       setCourses(courseData);
     } catch (error) {
       toast({
@@ -101,7 +100,7 @@ const TrainerManagement = () => {
     }
 
     try {
-      await trainerService.deleteTrainer(trainer.id);
+      await TrainerService.deleteTrainer(trainer.id);
       toast({
         title: "Success",
         description: "Trainer deleted successfully",
