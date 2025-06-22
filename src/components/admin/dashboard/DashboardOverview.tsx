@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { StudentService } from '@/services/studentService';
 import { courseService } from '@/services/courseService';
-import { trainerService } from '@/services/trainerService';
+import { TrainerService } from '@/services/trainerService';
 import DashboardStats from './DashboardStats';
 import RecentActivity from './RecentActivity';
 
@@ -23,7 +23,7 @@ const DashboardOverview = () => {
         setCourseCount(coursesResult.length);
 
         // Fetch trainer count
-        const trainersResult = await trainerService.getAllTrainers();
+        const trainersResult = await TrainerService.getAllTrainers();
         setTrainerCount(trainersResult.length);
       } catch (error) {
         console.error('Error fetching counts:', error);
