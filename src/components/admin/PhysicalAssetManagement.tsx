@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History, BarChart3, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 import PhysicalAssetForm from './PhysicalAssetForm';
-import AssetAssignmentModal from './AssetAssignmentModal';
+import EnhancedAssetAssignmentModal from './EnhancedAssetAssignmentModal';
 import AssetHistoryModal from './AssetHistoryModal';
+import AssetStatusDashboard from './AssetStatusDashboard';
 import type { Database } from '@/integrations/supabase/types';
 
 type PhysicalAsset = Database['public']['Tables']['physical_assets']['Row'];
@@ -19,6 +21,7 @@ const PhysicalAssetManagement = () => {
   const [assets, setAssets] = useState<PhysicalAsset[]>([]);
   const [filteredAssets, setFilteredAssets] = useState<PhysicalAsset[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<PhysicalAsset | null>(null);
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
@@ -33,13 +36,18 @@ const PhysicalAssetManagement = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = assets.filter(asset =>
+    let filtered = assets.filter(asset =>
       asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       asset.order_number?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(asset => asset.status === statusFilter);
+    }
+
     setFilteredAssets(filtered);
-  }, [assets, searchTerm]);
+  }, [assets, searchTerm, statusFilter]);
 
   const loadAssets = async () => {
     try {
@@ -91,6 +99,23 @@ const PhysicalAssetManagement = () => {
     setAssignmentModalOpen(true);
   };
 
+  const handleMarkReadyToReturn = async (asset: PhysicalAsset) => {
+    try {
+      await physicalAssetService.markAssetReadyToReturn(asset.id);
+      toast({
+        title: "Success",
+        description: "Asset marked as ready to return",
+      });
+      loadAssets();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update asset status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleReturnAsset = async (asset: PhysicalAsset) => {
     if (!confirm('Are you sure you want to mark this asset as returned?')) return;
 
@@ -116,6 +141,23 @@ const PhysicalAssetManagement = () => {
     }
   };
 
+  const handleMarkAsAvailable = async (asset: PhysicalAsset) => {
+    try {
+      await physicalAssetService.markAssetAsAvailable(asset.id);
+      toast({
+        title: "Success",
+        description: "Asset marked as available",
+      });
+      loadAssets();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update asset status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleViewHistory = (asset: PhysicalAsset) => {
     setSelectedAssetForHistory(asset);
     setHistoryModalOpen(true);
@@ -126,6 +168,7 @@ const PhysicalAssetManagement = () => {
       case 'available': return 'bg-green-100 text-green-800';
       case 'rental_in_progress': return 'bg-blue-100 text-blue-800';
       case 'ready_to_return': return 'bg-yellow-100 text-yellow-800';
+      case 'returned': return 'bg-gray-100 text-gray-800';
       case 'maintenance': return 'bg-orange-100 text-orange-800';
       case 'lost': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -137,149 +180,238 @@ const PhysicalAssetManagement = () => {
     return `€${price.toFixed(2)}/month`;
   };
 
+  const getActionButtons = (asset: PhysicalAsset) => {
+    const buttons = [];
+
+    // History button (always available)
+    buttons.push(
+      <Button
+        key="history"
+        variant="ghost"
+        size="sm"
+        onClick={() => handleViewHistory(asset)}
+        className="text-purple-600 hover:text-purple-700"
+      >
+        <History className="w-4 h-4" />
+      </Button>
+    );
+
+    // Status-specific action buttons
+    switch (asset.status) {
+      case 'available':
+        buttons.push(
+          <Button
+            key="assign"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAssignAsset(asset)}
+            className="text-green-600 hover:text-green-700"
+          >
+            <UserPlus className="w-4 h-4" />
+          </Button>
+        );
+        break;
+      
+      case 'rental_in_progress':
+        buttons.push(
+          <Button
+            key="ready-return"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleMarkReadyToReturn(asset)}
+            className="text-yellow-600 hover:text-yellow-700"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        );
+        break;
+      
+      case 'ready_to_return':
+        buttons.push(
+          <Button
+            key="return"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleReturnAsset(asset)}
+            className="text-orange-600 hover:text-orange-700"
+          >
+            <CheckCircle className="w-4 h-4" />
+          </Button>
+        );
+        break;
+      
+      case 'returned':
+        buttons.push(
+          <Button
+            key="available"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleMarkAsAvailable(asset)}
+            className="text-green-600 hover:text-green-700"
+          >
+            <CheckCircle className="w-4 h-4" />
+          </Button>
+        );
+        break;
+    }
+
+    // Edit and delete buttons (always available)
+    buttons.push(
+      <Button
+        key="edit"
+        variant="ghost"
+        size="sm"
+        onClick={() => handleEditAsset(asset)}
+        className="text-blue-600 hover:text-blue-700"
+      >
+        <Edit className="w-4 h-4" />
+      </Button>,
+      <Button
+        key="delete"
+        variant="ghost"
+        size="sm"
+        onClick={() => handleDeleteAsset(asset)}
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    );
+
+    return buttons;
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold edu-gradient-text mb-2">Physical Asset Management</h1>
-        <p className="text-gray-600">Manage rental equipment and track assignments.</p>
+        <p className="text-gray-600">Manage rental equipment with enhanced tracking and assignment capabilities.</p>
       </div>
 
-      <Card className="edu-card">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <CardTitle>Physical Assets</CardTitle>
-            <Button onClick={handleAddAsset} className="edu-button">
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Asset
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search assets by name, serial number, or order number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+      <Tabs defaultValue="assets" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="assets">Asset Management</TabsTrigger>
+          <TabsTrigger value="dashboard" className="flex items-center space-x-2">
+            <BarChart3 className="w-4 h-4" />
+            <span>Status Dashboard</span>
+          </TabsTrigger>
+        </TabsList>
 
-          {isLoading ? (
-            <div className="text-center py-8">Loading physical assets...</div>
-          ) : filteredAssets.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {searchTerm ? 'No assets found matching your search.' : 'No physical assets available. Create your first asset!'}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Serial Number</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAssets.map((asset) => (
-                    <TableRow key={asset.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{asset.name}</div>
-                          {asset.order_number && (
-                            <div className="text-sm text-gray-500">
-                              Order: {asset.order_number}
+        <TabsContent value="assets" className="space-y-6">
+          <Card className="edu-card">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <CardTitle>Physical Assets</CardTitle>
+                <Button onClick={handleAddAsset} className="edu-button">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Asset
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search assets by name, serial number, or order number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="available">Available</option>
+                  <option value="rental_in_progress">In Progress</option>
+                  <option value="ready_to_return">Ready to Return</option>
+                  <option value="returned">Returned</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="lost">Lost</option>
+                </select>
+              </div>
+
+              {isLoading ? (
+                <div className="text-center py-8">Loading physical assets...</div>
+              ) : filteredAssets.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? 'No assets found matching your criteria.' 
+                    : 'No physical assets available. Create your first asset!'
+                  }
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Serial Number</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Assigned To</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAssets.map((asset) => (
+                        <TableRow key={asset.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{asset.name}</div>
+                              {asset.order_number && (
+                                <div className="text-sm text-gray-500">
+                                  Order: {asset.order_number}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                          {asset.serial_number || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(asset.status)}>
-                          {asset.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {asset.assigned_to_id ? (
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {asset.assigned_to_type?.charAt(0).toUpperCase() + asset.assigned_to_type?.slice(1)}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                              {asset.serial_number || 'N/A'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(asset.status)}>
+                              {asset.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {asset.assigned_to_id ? (
+                              <div className="text-sm">
+                                <div className="font-medium">
+                                  {asset.assigned_to_type?.charAt(0).toUpperCase() + asset.assigned_to_type?.slice(1)}
+                                </div>
+                                <div className="text-gray-500">ID: {asset.assigned_to_id.slice(0, 8)}...</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Unassigned</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600">
+                            {formatPrice(asset.price_per_month)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              {getActionButtons(asset)}
                             </div>
-                            <div className="text-gray-500">ID: {asset.assigned_to_id.slice(0, 8)}...</div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">Unassigned</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {formatPrice(asset.price_per_month)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewHistory(asset)}
-                            className="text-purple-600 hover:text-purple-700"
-                          >
-                            <History className="w-4 h-4" />
-                          </Button>
-                          {asset.status === 'available' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleAssignAsset(asset)}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <UserPlus className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {asset.status === 'rental_in_progress' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleReturnAsset(asset)}
-                              className="text-orange-600 hover:text-orange-700"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAsset(asset)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteAsset(asset)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard">
+          <AssetStatusDashboard />
+        </TabsContent>
+      </Tabs>
 
       <PhysicalAssetForm
         isOpen={isFormOpen}
@@ -288,7 +420,7 @@ const PhysicalAssetManagement = () => {
         editingAsset={editingAsset}
       />
 
-      <AssetAssignmentModal
+      <EnhancedAssetAssignmentModal
         isOpen={assignmentModalOpen}
         onClose={() => setAssignmentModalOpen(false)}
         onSuccess={loadAssets}

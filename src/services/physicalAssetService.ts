@@ -19,6 +19,28 @@ export const physicalAssetService = {
     return data || [];
   },
 
+  async getAssetsWithAssignments(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('physical_assets')
+      .select(`
+        *,
+        asset_assignments!left(
+          id,
+          assigned_to_id,
+          assigned_to_type,
+          assigned_by,
+          assignment_date,
+          return_date,
+          notes,
+          schedule_id
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
   async createAsset(asset: PhysicalAssetInsert): Promise<PhysicalAsset> {
     const { data, error } = await supabase
       .from('physical_assets')
@@ -67,6 +89,28 @@ export const physicalAssetService = {
     });
   },
 
+  async assignAssetToCourse(assignment: AssetAssignmentInsert & { schedule_id: string }): Promise<void> {
+    const { error } = await supabase
+      .from('asset_assignments')
+      .insert(assignment);
+
+    if (error) throw error;
+
+    // Update asset status to rental_in_progress
+    await this.updateAsset(assignment.asset_id, {
+      status: 'rental_in_progress',
+      assigned_to_id: assignment.assigned_to_id,
+      assigned_to_type: assignment.assigned_to_type,
+      rental_start_date: new Date().toISOString().split('T')[0]
+    });
+  },
+
+  async markAssetReadyToReturn(assetId: string): Promise<void> {
+    await this.updateAsset(assetId, {
+      status: 'ready_to_return'
+    });
+  },
+
   async returnAsset(assetId: string, assignmentId: string): Promise<void> {
     // Update assignment with return date
     const { error: assignmentError } = await supabase
@@ -76,11 +120,11 @@ export const physicalAssetService = {
 
     if (assignmentError) throw assignmentError;
 
-    // Update asset status to available
+    // Update asset status to returned
     const { error: assetError } = await supabase
       .from('physical_assets')
       .update({
-        status: 'available',
+        status: 'returned',
         assigned_to_id: null,
         assigned_to_type: null,
         rental_end_date: new Date().toISOString().split('T')[0]
@@ -88,6 +132,16 @@ export const physicalAssetService = {
       .eq('id', assetId);
 
     if (assetError) throw assetError;
+  },
+
+  async markAssetAsAvailable(assetId: string): Promise<void> {
+    await this.updateAsset(assetId, {
+      status: 'available',
+      assigned_to_id: null,
+      assigned_to_type: null,
+      rental_start_date: null,
+      rental_end_date: null
+    });
   },
 
   async getAssetAssignments(assetId: string): Promise<AssetAssignment[]> {
@@ -101,16 +155,42 @@ export const physicalAssetService = {
     return data || [];
   },
 
-  async getAssignmentHistory(): Promise<AssetAssignment[]> {
+  async getAssignmentHistory(): Promise<any[]> {
     const { data, error } = await supabase
       .from('asset_assignments')
       .select(`
         *,
-        physical_assets!inner(name, serial_number)
+        physical_assets!inner(name, serial_number),
+        course_schedules(
+          id,
+          start_date,
+          end_date,
+          courses(course_title)
+        )
       `)
       .order('assignment_date', { ascending: false });
 
     if (error) throw error;
     return data || [];
+  },
+
+  async getAssetsByStatus(status: string): Promise<PhysicalAsset[]> {
+    const { data, error } = await supabase
+      .from('physical_assets')
+      .select('*')
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async bulkUpdateAssetStatus(assetIds: string[], status: string): Promise<void> {
+    const { error } = await supabase
+      .from('physical_assets')
+      .update({ status })
+      .in('id', assetIds);
+
+    if (error) throw error;
   }
 };

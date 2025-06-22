@@ -20,6 +20,7 @@ export type Database = {
           id: string
           notes: string | null
           return_date: string | null
+          schedule_id: string | null
           updated_at: string
         }
         Insert: {
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           notes?: string | null
           return_date?: string | null
+          schedule_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -44,6 +46,7 @@ export type Database = {
           id?: string
           notes?: string | null
           return_date?: string | null
+          schedule_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -52,6 +55,13 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "physical_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "course_schedules"
             referencedColumns: ["id"]
           },
         ]
