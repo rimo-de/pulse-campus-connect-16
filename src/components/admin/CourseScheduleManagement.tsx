@@ -1,17 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Edit, Trash2, Copy, Calendar, Filter, Users, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { courseScheduleService } from '@/services/courseScheduleService';
-import { format } from 'date-fns';
 import CourseScheduleForm from './course-schedule/CourseScheduleForm';
 import CourseScheduleCalendar from './course-schedule/CourseScheduleCalendar';
+import CourseScheduleControls from './course-schedule/CourseScheduleControls';
+import CourseScheduleTable from './course-schedule/CourseScheduleTable';
 import StudentAssignmentModal from './course-schedule/StudentAssignmentModal';
 import EnrolledStudentsList from './course-schedule/EnrolledStudentsList';
 import type { CourseSchedule } from '@/types/course';
@@ -84,14 +79,6 @@ const CourseScheduleManagement = () => {
     setFilteredSchedules(filtered);
   };
 
-  useEffect(() => {
-    loadSchedules();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [schedules, searchTerm, statusFilter, monthFilter]);
-
   const handleAddSchedule = () => {
     setEditingSchedule(null);
     setIsFormOpen(true);
@@ -122,7 +109,6 @@ const CourseScheduleManagement = () => {
   };
 
   const handleDuplicateSchedule = async (schedule: CourseSchedule) => {
-    // For simplicity, duplicate with start date 30 days from original
     const originalStartDate = new Date(schedule.start_date);
     const newStartDate = new Date(originalStartDate);
     newStartDate.setDate(newStartDate.getDate() + 30);
@@ -153,33 +139,6 @@ const CourseScheduleManagement = () => {
     setIsEnrolledListOpen(true);
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'upcoming': return 'bg-blue-100 text-blue-800';
-      case 'ongoing': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getMonthOptions = () => {
-    const months = new Set<string>();
-    schedules.forEach(schedule => {
-      const date = new Date(schedule.start_date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      months.add(monthKey);
-    });
-    
-    return Array.from(months).sort().map(monthKey => {
-      const [year, month] = monthKey.split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1);
-      return {
-        value: monthKey,
-        label: format(date, 'MMMM yyyy')
-      };
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -187,187 +146,43 @@ const CourseScheduleManagement = () => {
         <p className="text-gray-600">Schedule and manage course batches with intelligent date calculations.</p>
       </div>
 
-      {/* Controls */}
       <Card className="edu-card">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <CardTitle>Course Schedules</CardTitle>
-            <div className="flex space-x-2">
-              <Button
-                variant={viewMode === 'table' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-              >
-                Table
-              </Button>
-              <Button
-                variant={viewMode === 'calendar' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('calendar')}
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                Calendar
-              </Button>
-              <Button onClick={handleAddSchedule} className="edu-button">
-                <Plus className="w-4 h-4 mr-2" />
-                Schedule Course
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Course Schedules</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search by course name or delivery mode..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={monthFilter} onValueChange={setMonthFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Month" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Months</SelectItem>
-                {getMonthOptions().map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CourseScheduleControls
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            monthFilter={monthFilter}
+            setMonthFilter={setMonthFilter}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            onAddSchedule={handleAddSchedule}
+            schedules={schedules}
+          />
 
-          {/* Content */}
           {viewMode === 'calendar' ? (
             <CourseScheduleCalendar schedules={filteredSchedules} />
           ) : (
             <>
               {isLoading ? (
                 <div className="text-center py-8">Loading schedules...</div>
-              ) : filteredSchedules.length === 0 ? (
+              ) : filteredSchedules.length === 0 && (searchTerm || statusFilter !== 'all' || monthFilter !== 'all') ? (
                 <div className="text-center py-8 text-gray-500">
-                  {searchTerm || statusFilter !== 'all' || monthFilter !== 'all' 
-                    ? 'No schedules found matching your filters.' 
-                    : 'No course schedules available. Create your first schedule!'}
+                  No schedules found matching your filters.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Course Name</TableHead>
-                        <TableHead>Delivery Mode</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Students</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSchedules.map((schedule) => (
-                        <TableRow key={schedule.id}>
-                          <TableCell>
-                            <div className="font-medium">
-                              {schedule.course?.course_title}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div>{schedule.course_offering?.delivery_mode?.name}</div>
-                              <div className="text-gray-500">
-                                {schedule.course_offering?.delivery_mode?.delivery_method} • {schedule.course_offering?.delivery_mode?.delivery_type}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(schedule.start_date), 'dd MMM yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(schedule.end_date), 'dd MMM yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {schedule.course_offering?.duration_days} working days
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusBadgeColor(schedule.status)}>
-                              {schedule.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewEnrolledStudents(schedule)}
-                                className="text-blue-600 hover:text-blue-700"
-                                title="View enrolled students"
-                              >
-                                <Users className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleAssignStudents(schedule)}
-                                className="text-green-600 hover:text-green-700"
-                                title="Assign students"
-                              >
-                                <UserPlus className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditSchedule(schedule)}
-                                className="text-blue-600 hover:text-blue-700"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDuplicateSchedule(schedule)}
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteSchedule(schedule.id)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <CourseScheduleTable
+                  schedules={filteredSchedules}
+                  onEditSchedule={handleEditSchedule}
+                  onDeleteSchedule={handleDeleteSchedule}
+                  onDuplicateSchedule={handleDuplicateSchedule}
+                  onAssignStudents={handleAssignStudents}
+                  onViewEnrolledStudents={handleViewEnrolledStudents}
+                />
               )}
             </>
           )}
