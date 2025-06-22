@@ -24,6 +24,8 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
       const fileName = `${trainerId || 'temp'}_${fileType}_${Date.now()}.${fileExt}`;
       const filePath = `trainer-documents/${fileName}`;
 
+      console.log('Uploading file:', { fileName, filePath, fileType });
+
       const { error: uploadError } = await supabase.storage
         .from('trainer-files')
         .upload(filePath, file);
@@ -47,6 +49,8 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
         updated_at: new Date().toISOString()
       };
 
+      console.log('Document data created:', documentData);
+
       // If trainer exists, save to database immediately
       if (trainerId) {
         const { data: savedDoc, error: dbError } = await supabase
@@ -60,6 +64,7 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
           throw dbError;
         }
 
+        console.log('Document saved to database:', savedDoc);
         return savedDoc as TrainerDocument;
       }
 
@@ -108,8 +113,10 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
 
   const removeDocument = async (documentId: string) => {
     try {
-      // Remove from database if trainer exists
-      if (trainerId) {
+      const docToRemove = documents.find(doc => doc.id === documentId);
+      
+      // Remove from database if trainer exists and document has trainer_id
+      if (trainerId && docToRemove?.trainer_id) {
         const { error } = await supabase
           .from('trainer_documents')
           .delete()
@@ -138,6 +145,14 @@ const TrainerFileUpload = ({ trainerId, existingDocuments = [], onDocumentsChang
       });
     }
   };
+
+  // Update documents when existingDocuments prop changes
+  React.useEffect(() => {
+    if (existingDocuments.length !== documents.length || 
+        !existingDocuments.every(doc => documents.some(d => d.id === doc.id))) {
+      setDocuments(existingDocuments);
+    }
+  }, [existingDocuments]);
 
   return (
     <div className="space-y-4">

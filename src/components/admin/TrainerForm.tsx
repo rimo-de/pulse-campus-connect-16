@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,7 +53,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       console.log('Loading trainer data:', trainer);
       
       // Set form values for existing trainer
-      form.reset({
+      const formData = {
         first_name: trainer.first_name || '',
         last_name: trainer.last_name || '',
         mobile_number: trainer.mobile_number || '',
@@ -61,10 +62,14 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         experience_level: trainer.experience_level as 'Junior' | 'Mid-Level' | 'Senior' | 'Expert',
         profile_image_url: trainer.profile_image_url || '',
         skills: trainer.trainer_skills?.map(skill => skill.skill) || [],
-      });
+      };
+      
+      form.reset(formData);
       
       // Set profile image preview
-      setImagePreview(trainer.profile_image_url || null);
+      if (trainer.profile_image_url) {
+        setImagePreview(trainer.profile_image_url);
+      }
       
       // Load existing skills
       const existingSkills = trainer.trainer_skills?.map(skill => skill.skill) || [];
@@ -221,10 +226,11 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         }
       }
 
+      // Ensure skills are properly included in the form data
       const submitData = {
         ...data,
-        expertise_area: data.expertise_area || null,
-        skills // Ensure skills are included
+        expertise_area: data.expertise_area === 'none' ? null : data.expertise_area || null,
+        skills: skills // Use the current skills state
       };
 
       console.log('Final submit data:', submitData);
