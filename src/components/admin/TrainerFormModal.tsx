@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import TrainerForm from './TrainerForm';
 import type { Trainer } from '@/types/trainer';
 
@@ -26,13 +31,13 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+    <AlertDialog open={isOpen} onOpenChange={handleClose}>
+      <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-xl font-semibold">
             {trainer ? 'Edit Trainer' : 'Add New Trainer'}
-          </DialogTitle>
-        </DialogHeader>
+          </AlertDialogTitle>
+        </AlertDialogHeader>
         <div className="mt-4">
           <TrainerForm
             trainer={trainer}
@@ -40,8 +45,8 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
             onCancel={handleClose}
           />
         </div>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

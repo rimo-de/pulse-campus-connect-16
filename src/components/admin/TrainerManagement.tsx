@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,9 +124,9 @@ const TrainerManagement = () => {
 
   const handleFormSuccess = () => {
     console.log('TrainerManagement: Form success callback triggered');
-    loadData();
     setShowFormModal(false);
     setEditingTrainer(null);
+    loadData();
   };
 
   const handleCloseModal = () => {
@@ -275,12 +274,14 @@ const TrainerManagement = () => {
         </CardContent>
       </Card>
 
-      <TrainerFormModal
-        isOpen={showFormModal}
-        onClose={handleCloseModal}
-        trainer={editingTrainer}
-        onSuccess={handleFormSuccess}
-      />
+      {showFormModal && (
+        <TrainerFormModal
+          isOpen={showFormModal}
+          onClose={handleCloseModal}
+          trainer={editingTrainer}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 };

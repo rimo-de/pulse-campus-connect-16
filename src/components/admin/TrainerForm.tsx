@@ -23,7 +23,6 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [isFormReady, setIsFormReady] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<TrainerFormData>({
@@ -49,7 +48,6 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
       const data = await courseService.getAllCourses();
       console.log('TrainerForm: Courses loaded:', data.length);
       setCourses(data);
-      setIsFormReady(true);
     } catch (error) {
       console.error('TrainerForm: Failed to load courses:', error);
       toast({
@@ -57,7 +55,6 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
         description: "Failed to load courses",
         variant: "destructive",
       });
-      setIsFormReady(true); // Still show form even if courses fail to load
     }
   };
 
@@ -95,30 +92,17 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
     }
   };
 
-  if (!isFormReady) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600">Loading form...</p>
-        </div>
-      </div>
-    );
-  }
-
-  console.log('TrainerForm: Rendering form with', courses.length, 'courses');
-
   return (
-    <div className="space-y-6">
+    <div className="p-6 bg-white">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
               name="first_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>First Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter first name" {...field} />
                   </FormControl>
@@ -132,7 +116,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
               name="last_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>Last Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter last name" {...field} />
                   </FormControl>
@@ -146,7 +130,7 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="Enter email" {...field} />
                   </FormControl>
@@ -174,14 +158,14 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
               name="experience_level"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Experience Level</FormLabel>
+                  <FormLabel>Experience Level *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select experience level" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-white border shadow-lg z-50">
                       <SelectItem value="Junior">Junior</SelectItem>
                       <SelectItem value="Mid-Level">Mid-Level</SelectItem>
                       <SelectItem value="Senior">Senior</SelectItem>
@@ -201,11 +185,11 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
                   <FormLabel>Expertise Area</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select expertise area" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-white border shadow-lg z-50">
                       <SelectItem value="">No specific expertise</SelectItem>
                       {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
@@ -220,11 +204,21 @@ const TrainerForm = ({ trainer, onSuccess, onCancel }: TrainerFormProps) => {
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <div className="flex justify-end space-x-4 pt-6 border-t">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel} 
+              disabled={isLoading}
+              className="px-6"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="px-6"
+            >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
