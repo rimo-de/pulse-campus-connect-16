@@ -10,9 +10,7 @@ import {
 import TrainerForm from './TrainerForm';
 import type { Trainer } from '@/types/trainer';
 
-interface Tra
-
-DialogProps {
+interface TrainerFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   trainer?: Trainer | null;
