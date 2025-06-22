@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import TrainerFormModal from './TrainerFormModal';
+import TrainerAvatar from './TrainerAvatar';
 import type { Trainer } from '@/types/trainer';
 import type { Course } from '@/types/course';
 
@@ -219,31 +220,50 @@ const TrainerManagement = () => {
               {filteredTrainers.map((trainer) => (
                 <div key={trainer.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="font-medium text-gray-900 text-lg">
-                          {trainer.first_name} {trainer.last_name}
-                        </h4>
-                        <Badge className={getExperienceBadgeColor(trainer.experience_level)}>
-                          {trainer.experience_level}
-                        </Badge>
-                      </div>
+                    <div className="flex items-start space-x-4 flex-1">
+                      <TrainerAvatar trainer={trainer} size="md" />
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                        <div className="flex items-center space-x-2">
-                          <Mail className="w-4 h-4" />
-                          <span>{trainer.email}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h4 className="font-medium text-gray-900 text-lg">
+                            {trainer.first_name} {trainer.last_name}
+                          </h4>
+                          <Badge className={getExperienceBadgeColor(trainer.experience_level)}>
+                            {trainer.experience_level}
+                          </Badge>
                         </div>
-                        {trainer.mobile_number && (
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
                           <div className="flex items-center space-x-2">
-                            <Phone className="w-4 h-4" />
-                            <span>{trainer.mobile_number}</span>
+                            <Mail className="w-4 h-4" />
+                            <span>{trainer.email}</span>
                           </div>
-                        )}
-                        {trainer.expertise_course && (
-                          <div className="flex items-center space-x-2">
-                            <Award className="w-4 h-4" />
-                            <span>Expert in: {trainer.expertise_course.course_title}</span>
+                          {trainer.mobile_number && (
+                            <div className="flex items-center space-x-2">
+                              <Phone className="w-4 h-4" />
+                              <span>{trainer.mobile_number}</span>
+                            </div>
+                          )}
+                          {trainer.expertise_course && (
+                            <div className="flex items-center space-x-2">
+                              <Award className="w-4 h-4" />
+                              <span>Expert in: {trainer.expertise_course.course_title}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {trainer.trainer_skills && trainer.trainer_skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {trainer.trainer_skills.slice(0, 5).map((skill, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {skill.skill}
+                              </Badge>
+                            ))}
+                            {trainer.trainer_skills.length > 5 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{trainer.trainer_skills.length - 5} more
+                              </Badge>
+                            )}
                           </div>
                         )}
                       </div>

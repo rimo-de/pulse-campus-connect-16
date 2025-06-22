@@ -6,10 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { trainerSchema, type TrainerFormData, type Trainer } from '@/types/trainer';
 import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
+import { supabase } from '@/integrations/supabase/client';
+import TrainerAvatar from './TrainerAvatar';
+import { Upload, X, Plus } from 'lucide-react';
 import type { Course } from '@/types/course';
 
 interface TrainerFormProps {
@@ -22,6 +26,10 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [skills, setSkills] = useState<string[]>(trainer?.trainer_skills?.map(s => s.skill) || []);
+  const [newSkill, setNewSkill] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(trainer?.profile_image_url || null);
   const { toast } = useToast();
 
   const form = useForm<TrainerFormData>({
@@ -33,6 +41,8 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       email: trainer?.email || '',
       expertise_area: trainer?.expertise_area || '',
       experience_level: (trainer?.experience_level as any) || 'Junior',
+      profile_image_url: trainer?.profile_image_url || '',
+      skills: skills,
     },
   });
 
@@ -57,21 +67,86 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
     }
   };
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `trainer-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('trainer-files')
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from('trainer-files')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      const updatedSkills = [...skills, newSkill.trim()];
+      setSkills(updatedSkills);
+      form.setValue('skills', updatedSkills);
+      setNewSkill('');
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    const updatedSkills = skills.filter(skill => skill !== skillToRemove);
+    setSkills(updatedSkills);
+    form.setValue('skills', updatedSkills);
+  };
+
   const onSubmit = async (data: TrainerFormData) => {
     console.log('TrainerForm: Submitting form with data:', data);
     setIsLoading(true);
     
     try {
+      // Upload image if there's a new one
+      let imageUrl = trainer?.profile_image_url;
+      if (imageFile) {
+        const uploadedUrl = await uploadImage();
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+          data.profile_image_url = uploadedUrl;
+        }
+      }
+
       if (trainer) {
         console.log('TrainerForm: Updating trainer:', trainer.id);
-        await TrainerService.updateTrainer(trainer.id, data);
+        await TrainerService.updateTrainer(trainer.id, { ...data, skills });
         toast({
           title: "Success",
           description: "Trainer updated successfully",
         });
       } else {
         console.log('TrainerForm: Creating new trainer');
-        await TrainerService.createTrainer(data);
+        await TrainerService.createTrainer({ ...data, skills });
         toast({
           title: "Success",
           description: "Trainer created successfully",
@@ -94,6 +169,37 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Profile Image Section */}
+        <div className="flex items-center space-x-4">
+          {trainer && (
+            <TrainerAvatar trainer={trainer} size="lg" />
+          )}
+          {imagePreview && !trainer && (
+            <div className="relative">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            </div>
+          )}
+          <div>
+            <label htmlFor="image-upload" className="cursor-pointer">
+              <div className="flex items-center space-x-2 px-4 py-2 border rounded-md hover:bg-gray-50">
+                <Upload className="w-4 h-4" />
+                <span>Upload Profile Image</span>
+              </div>
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -180,7 +286,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
             name="expertise_area"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Expertise Area</FormLabel>
+                <FormLabel>Primary Expertise Area</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
@@ -188,7 +294,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">No specific expertise</SelectItem>
+                    <SelectItem value="">No specific expertise</SelectItem>
                     {courses.map((course) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.course_title}
@@ -200,6 +306,36 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
               </FormItem>
             )}
           />
+        </div>
+
+        {/* Skills Section */}
+        <div className="space-y-4">
+          <FormLabel>Skills & Specializations</FormLabel>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {skills.map((skill, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center space-x-1">
+                <span>{skill}</span>
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  className="ml-1 hover:text-red-600"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex space-x-2">
+            <Input
+              placeholder="Add a skill..."
+              value={newSkill}
+              onChange={(e) => setNewSkill(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+            />
+            <Button type="button" onClick={addSkill} variant="outline" size="sm">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="flex justify-end space-x-4 pt-6 border-t">
