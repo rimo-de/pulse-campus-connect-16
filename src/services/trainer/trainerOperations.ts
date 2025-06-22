@@ -8,7 +8,7 @@ export const trainerOperations = {
       .from('trainers')
       .select(`
         *,
-        expertise_course:courses (
+        expertise_course:courses!trainers_expertise_area_fkey (
           course_title
         ),
         trainer_files (*),
@@ -33,6 +33,8 @@ export const trainerOperations = {
   },
 
   async createTrainer(trainerData: TrainerFormData & { skills?: string[] }): Promise<Trainer> {
+    console.log('Creating trainer with data:', trainerData);
+
     const { data: trainer, error: trainerError } = await supabase
       .from('trainers')
       .insert({
@@ -52,8 +54,11 @@ export const trainerOperations = {
       throw new Error('Failed to create trainer');
     }
 
+    console.log('Trainer created successfully:', trainer);
+
     // Add skills if provided
     if (trainerData.skills && trainerData.skills.length > 0) {
+      console.log('Adding skills:', trainerData.skills);
       const skillsData = trainerData.skills.map(skill => ({
         trainer_id: trainer.id,
         skill: skill
@@ -65,13 +70,18 @@ export const trainerOperations = {
 
       if (skillsError) {
         console.error('Error adding trainer skills:', skillsError);
+        throw new Error('Failed to add trainer skills');
       }
+
+      console.log('Skills added successfully');
     }
 
     return trainer as Trainer;
   },
 
   async updateTrainer(id: string, trainerData: Partial<TrainerFormData> & { skills?: string[] }): Promise<Trainer> {
+    console.log('Updating trainer with ID:', id, 'Data:', trainerData);
+
     const updateData: any = {};
     
     if (trainerData.first_name !== undefined) updateData.first_name = trainerData.first_name;
@@ -94,13 +104,22 @@ export const trainerOperations = {
       throw new Error('Failed to update trainer');
     }
 
+    console.log('Trainer updated successfully:', data);
+
     // Update skills if provided
     if (trainerData.skills !== undefined) {
+      console.log('Updating skills for trainer:', id, 'New skills:', trainerData.skills);
+      
       // First, remove existing skills
-      await supabase
+      const { error: deleteError } = await supabase
         .from('trainer_skills')
         .delete()
         .eq('trainer_id', id);
+
+      if (deleteError) {
+        console.error('Error deleting existing skills:', deleteError);
+        throw new Error('Failed to update trainer skills');
+      }
 
       // Then add new skills
       if (trainerData.skills.length > 0) {
@@ -115,7 +134,10 @@ export const trainerOperations = {
 
         if (skillsError) {
           console.error('Error updating trainer skills:', skillsError);
+          throw new Error('Failed to update trainer skills');
         }
+
+        console.log('Skills updated successfully');
       }
     }
 
@@ -123,6 +145,8 @@ export const trainerOperations = {
   },
 
   async deleteTrainer(id: string): Promise<void> {
+    console.log('Deleting trainer with ID:', id);
+
     const { error } = await supabase
       .from('trainers')
       .delete()
@@ -132,5 +156,7 @@ export const trainerOperations = {
       console.error('Error deleting trainer:', error);
       throw new Error('Failed to delete trainer');
     }
+
+    console.log('Trainer deleted successfully');
   }
 };

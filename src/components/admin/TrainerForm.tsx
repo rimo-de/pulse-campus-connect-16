@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { trainerSchema, type TrainerFormData, type Trainer } from '@/types/trainer';
+import { trainerSchema, type TrainerFormData, type Trainer, type TrainerDocument } from '@/types/trainer';
 import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import { supabase } from '@/integrations/supabase/client';
 import TrainerAvatar from './TrainerAvatar';
+import TrainerFileUpload from './trainer-form/TrainerFileUpload';
 import { Upload, X, Plus } from 'lucide-react';
 import type { Course } from '@/types/course';
 
@@ -28,6 +29,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
   const [newSkill, setNewSkill] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<TrainerDocument[]>([]);
   const { toast } = useToast();
 
   const form = useForm<TrainerFormData>({
@@ -48,6 +50,8 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
     loadCourses();
     
     if (trainer) {
+      console.log('Loading trainer data:', trainer);
+      
       // Set form values for existing trainer
       form.reset({
         first_name: trainer.first_name || '',
@@ -66,6 +70,12 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       // Load existing skills
       const existingSkills = trainer.trainer_skills?.map(skill => skill.skill) || [];
       setSkills(existingSkills);
+      console.log('Loaded existing skills:', existingSkills);
+
+      // Load existing documents
+      const existingDocuments = trainer.trainer_documents || [];
+      setDocuments(existingDocuments);
+      console.log('Loaded existing documents:', existingDocuments);
     } else {
       // Reset for new trainer
       form.reset({
@@ -79,6 +89,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
         skills: [],
       });
       setSkills([]);
+      setDocuments([]);
       setImagePreview(null);
       setImageFile(null);
     }
@@ -144,6 +155,7 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       setSkills(updatedSkills);
       form.setValue('skills', updatedSkills);
       setNewSkill('');
+      console.log('Added skill, updated skills:', updatedSkills);
     }
   };
 
@@ -151,10 +163,53 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
     const updatedSkills = skills.filter(skill => skill !== skillToRemove);
     setSkills(updatedSkills);
     form.setValue('skills', updatedSkills);
+    console.log('Removed skill, updated skills:', updatedSkills);
+  };
+
+  const handleDocumentsChange = (newDocuments: TrainerDocument[]) => {
+    setDocuments(newDocuments);
+    console.log('Documents updated:', newDocuments);
+  };
+
+  const saveDocumentsToDatabase = async (trainerId: string, tempDocuments: TrainerDocument[]) => {
+    try {
+      // Filter out documents that are already saved (have trainer_id)
+      const unsavedDocuments = tempDocuments.filter(doc => !doc.trainer_id || doc.trainer_id === '');
+      
+      if (unsavedDocuments.length === 0) return;
+
+      const documentsToSave = unsavedDocuments.map(doc => ({
+        trainer_id: trainerId,
+        file_name: doc.file_name,
+        file_url: doc.file_url,
+        file_type: doc.file_type
+      }));
+
+      const { error } = await supabase
+        .from('trainer_documents')
+        .insert(documentsToSave);
+
+      if (error) {
+        console.error('Error saving documents:', error);
+        throw error;
+      }
+
+      console.log('Documents saved to database:', documentsToSave);
+    } catch (error) {
+      console.error('Error saving documents to database:', error);
+      toast({
+        title: "Warning",
+        description: "Trainer saved but some documents may not have been saved properly",
+        variant: "destructive",
+      });
+    }
   };
 
   const onSubmit = async (data: TrainerFormData) => {
     setIsLoading(true);
+    console.log('Submitting trainer form with data:', data);
+    console.log('Current skills:', skills);
+    console.log('Current documents:', documents);
     
     try {
       // Upload image if there's a new one
@@ -170,23 +225,31 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
       const submitData = {
         ...data,
         expertise_area: data.expertise_area || null,
-        skills
+        skills // Ensure skills are included
       };
 
+      console.log('Final submit data:', submitData);
+
+      let savedTrainer;
       if (trainer) {
-        await TrainerService.updateTrainer(trainer.id, submitData);
+        savedTrainer = await TrainerService.updateTrainer(trainer.id, submitData);
         toast({
           title: "Success",
           description: "Trainer updated successfully",
         });
       } else {
-        await TrainerService.createTrainer(submitData);
+        savedTrainer = await TrainerService.createTrainer(submitData);
+        // Save any uploaded documents for new trainer
+        if (documents.length > 0) {
+          await saveDocumentsToDatabase(savedTrainer.id, documents);
+        }
         toast({
           title: "Success",
           description: "Trainer created successfully",
         });
       }
       
+      console.log('Trainer saved successfully:', savedTrainer);
       onSuccess();
     } catch (error: any) {
       console.error('Error saving trainer:', error);
@@ -321,14 +384,14 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Primary Expertise Area</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select expertise area" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">No specific expertise</SelectItem>
+                    <SelectItem value="">No specific expertise</SelectItem>
                     {courses.map((course) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.course_title}
@@ -370,6 +433,16 @@ const TrainerForm = ({ trainer, onSuccess }: TrainerFormProps) => {
               <Plus className="w-4 h-4" />
             </Button>
           </div>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Documents</h3>
+          <TrainerFileUpload
+            trainerId={trainer?.id}
+            existingDocuments={documents}
+            onDocumentsChange={handleDocumentsChange}
+          />
         </div>
 
         <div className="flex justify-end space-x-4 pt-6 border-t">

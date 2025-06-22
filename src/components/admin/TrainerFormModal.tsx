@@ -10,7 +10,9 @@ import {
 import TrainerForm from './TrainerForm';
 import type { Trainer } from '@/types/trainer';
 
-interface TrainerFormModalProps {
+interface Tra
+
+DialogProps {
   isOpen: boolean;
   onClose: () => void;
   trainer?: Trainer | null;
@@ -19,6 +21,7 @@ interface TrainerFormModalProps {
 
 const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormModalProps) => {
   const handleSuccess = () => {
+    console.log('Trainer form completed successfully');
     onSuccess();
     onClose();
   };
@@ -31,13 +34,13 @@ const TrainerFormModal = ({ isOpen, onClose, trainer, onSuccess }: TrainerFormMo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {trainer ? 'Edit Trainer' : 'Add New Trainer'}
           </DialogTitle>
           <DialogDescription>
-            {trainer ? 'Update trainer information and settings.' : 'Create a new trainer profile with their details and expertise.'}
+            {trainer ? 'Update trainer information, skills, and documents.' : 'Create a new trainer profile with their details, skills, and documents.'}
           </DialogDescription>
         </DialogHeader>
         
