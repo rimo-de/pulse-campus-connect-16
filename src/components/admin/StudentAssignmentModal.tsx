@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Search, User } from 'lucide-react';
+import { Search, User, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 import type { Database } from '@/integrations/supabase/types';
@@ -72,6 +72,16 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
   const handleAssign = async () => {
     if (!asset || !selectedStudent) return;
 
+    // Check if asset is available for assignment
+    if (asset.status !== 'available') {
+      toast({
+        title: "Cannot Assign",
+        description: "This asset is not available for assignment. Please return it first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       await physicalAssetService.assignAssetToStudent(asset.id, selectedStudent.id);
@@ -87,7 +97,7 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
       console.error('Error assigning asset:', error);
       toast({
         title: "Error",
-        description: "Failed to assign asset",
+        description: error instanceof Error ? error.message : "Failed to assign asset",
         variant: "destructive",
       });
     } finally {
@@ -102,6 +112,9 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
   };
 
   if (!asset) return null;
+
+  // Check if asset is already assigned
+  const isAlreadyAssigned = asset.status !== 'available';
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -118,6 +131,19 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
           </div>
         </DialogHeader>
 
+        {isAlreadyAssigned && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-yellow-900">Asset Not Available</h4>
+              <p className="text-sm text-yellow-700 mt-1">
+                This asset is currently {asset.status.replace('_', ' ')} and cannot be assigned to another student. 
+                Please return the asset first.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-hidden flex flex-col space-y-4">
           <div className="space-y-2">
             <Label htmlFor="search">Search Students</Label>
@@ -129,11 +155,12 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                disabled={isAlreadyAssigned}
               />
             </div>
           </div>
 
-          {selectedStudent && (
+          {selectedStudent && !isAlreadyAssigned && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">Selected Student</h4>
               <div className="flex items-center space-x-3">
@@ -164,8 +191,8 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
                       key={student.id}
                       className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
                         selectedStudent?.id === student.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                      }`}
-                      onClick={() => handleStudentSelect(student)}
+                      } ${isAlreadyAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => !isAlreadyAssigned && handleStudentSelect(student)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -179,7 +206,7 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
                             <div className="text-sm text-gray-500">{student.email}</div>
                           </div>
                         </div>
-                        {selectedStudent?.id === student.id && (
+                        {selectedStudent?.id === student.id && !isAlreadyAssigned && (
                           <Badge variant="default" className="bg-blue-100 text-blue-800">
                             Selected
                           </Badge>
@@ -199,7 +226,7 @@ const StudentAssignmentModal = ({ isOpen, onClose, onSuccess, asset }: StudentAs
           </Button>
           <Button 
             onClick={handleAssign}
-            disabled={!selectedStudent || isLoading}
+            disabled={!selectedStudent || isLoading || isAlreadyAssigned}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {isLoading ? 'Assigning...' : 'Assign Asset'}

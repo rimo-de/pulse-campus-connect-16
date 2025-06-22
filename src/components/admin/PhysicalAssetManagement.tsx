@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History, BarChart3, CheckCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History, BarChart3, CheckCircle, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 import PhysicalAssetForm from './PhysicalAssetForm';
@@ -17,9 +18,17 @@ import type { Database } from '@/integrations/supabase/types';
 
 type PhysicalAsset = Database['public']['Tables']['physical_assets']['Row'];
 
+interface PhysicalAssetWithStudent extends PhysicalAsset {
+  assigned_student?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
 const PhysicalAssetManagement = () => {
-  const [assets, setAssets] = useState<PhysicalAsset[]>([]);
-  const [filteredAssets, setFilteredAssets] = useState<PhysicalAsset[]>([]);
+  const [assets, setAssets] = useState<PhysicalAssetWithStudent[]>([]);
+  const [filteredAssets, setFilteredAssets] = useState<PhysicalAssetWithStudent[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -53,7 +62,7 @@ const PhysicalAssetManagement = () => {
   const loadAssets = async () => {
     try {
       setIsLoading(true);
-      const data = await physicalAssetService.getAllAssets();
+      const data = await physicalAssetService.getAssetsWithStudentInfo();
       setAssets(data);
     } catch (error) {
       toast({
@@ -180,6 +189,40 @@ const PhysicalAssetManagement = () => {
     return `€${price.toFixed(2)}/month`;
   };
 
+  const renderAssignedStudent = (asset: PhysicalAssetWithStudent) => {
+    if (asset.assigned_student) {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+            <User className="w-3 h-3 text-blue-600" />
+          </div>
+          <div className="text-sm">
+            <div className="font-medium text-gray-900">
+              {asset.assigned_student.first_name} {asset.assigned_student.last_name}
+            </div>
+            <div className="text-gray-500 text-xs">{asset.assigned_student.email}</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (asset.status === 'available') {
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleAssignToStudent(asset)}
+          className="text-blue-600 hover:text-blue-700 h-8 px-2"
+        >
+          <UserPlus className="w-4 h-4 mr-1" />
+          Assign
+        </Button>
+      );
+    }
+
+    return <span className="text-gray-400 text-sm">Unassigned</span>;
+  };
+
   const getActionButtons = (asset: PhysicalAsset) => {
     const buttons = [];
 
@@ -206,15 +249,6 @@ const PhysicalAssetManagement = () => {
             size="sm"
             onClick={() => handleAssignAsset(asset)}
             className="text-green-600 hover:text-green-700"
-          >
-            <UserPlus className="w-4 h-4" />
-          </Button>,
-          <Button
-            key="assign-student"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleAssignToStudent(asset)}
-            className="text-blue-600 hover:text-blue-700"
           >
             <UserPlus className="w-4 h-4" />
           </Button>
@@ -388,16 +422,7 @@ const PhysicalAssetManagement = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {asset.assigned_to_id ? (
-                              <div className="text-sm">
-                                <div className="font-medium">
-                                  {asset.assigned_to_type?.charAt(0).toUpperCase() + asset.assigned_to_type?.slice(1)}
-                                </div>
-                                <div className="text-gray-500">ID: {asset.assigned_to_id.slice(0, 8)}...</div>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">Unassigned</span>
-                            )}
+                            {renderAssignedStudent(asset)}
                           </TableCell>
                           <TableCell className="text-sm text-gray-600">
                             {formatPrice(asset.price_per_month)}

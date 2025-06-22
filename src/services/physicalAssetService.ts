@@ -18,6 +18,30 @@ export const physicalAssetService = {
     return data || [];
   },
 
+  async getAssetsWithStudentInfo(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('physical_assets')
+      .select(`
+        *,
+        student_headers!left(
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Transform the data to include assigned_student info
+    return (data || []).map(asset => ({
+      ...asset,
+      assigned_student: asset.assigned_to_type === 'student' && asset.student_headers 
+        ? asset.student_headers 
+        : null
+    }));
+  },
+
   async getAssetsWithAssignments(): Promise<any[]> {
     const { data, error } = await supabase
       .from('physical_assets')
@@ -73,6 +97,19 @@ export const physicalAssetService = {
   },
 
   async assignAssetToStudent(assetId: string, studentId: string): Promise<void> {
+    // First check if asset is already assigned
+    const { data: currentAsset, error: fetchError } = await supabase
+      .from('physical_assets')
+      .select('status, assigned_to_id')
+      .eq('id', assetId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    if (currentAsset.status !== 'available') {
+      throw new Error('Asset is not available for assignment');
+    }
+
     // Create assignment record
     const assignment: AssetAssignmentInsert = {
       asset_id: assetId,
@@ -118,12 +155,9 @@ export const physicalAssetService = {
       if (assignmentError) throw assignmentError;
     }
 
-    // Update asset status to available
+    // Update asset status to returned
     await this.updateAsset(assetId, {
-      status: 'available',
-      assigned_to_id: null,
-      assigned_to_type: null,
-      rental_start_date: null,
+      status: 'returned',
       rental_end_date: new Date().toISOString().split('T')[0]
     });
   },
