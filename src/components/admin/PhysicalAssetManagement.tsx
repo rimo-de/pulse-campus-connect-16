@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History, BarChart3, CheckCircle, User } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserPlus, RotateCcw, History, BarChart3, CheckCircle, User, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 import PhysicalAssetForm from './PhysicalAssetForm';
-import EnhancedAssetAssignmentModal from './EnhancedAssetAssignmentModal';
 import StudentAssignmentModal from './StudentAssignmentModal';
 import AssetHistoryModal from './AssetHistoryModal';
 import AssetStatusDashboard from './AssetStatusDashboard';
@@ -33,12 +32,12 @@ const PhysicalAssetManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<PhysicalAsset | null>(null);
-  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [studentAssignmentModalOpen, setStudentAssignmentModalOpen] = useState(false);
   const [selectedAssetForAssignment, setSelectedAssetForAssignment] = useState<PhysicalAsset | null>(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedAssetForHistory, setSelectedAssetForHistory] = useState<PhysicalAsset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,12 +61,16 @@ const PhysicalAssetManagement = () => {
   const loadAssets = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       const data = await physicalAssetService.getAssetsWithStudentInfo();
       setAssets(data);
+      console.log('Assets loaded successfully:', data.length);
     } catch (error) {
+      console.error('Error loading assets:', error);
+      setLoadError(error instanceof Error ? error.message : 'Failed to load assets');
       toast({
         title: "Error",
-        description: "Failed to load physical assets",
+        description: "Failed to load physical assets. Please try refreshing the page.",
         variant: "destructive",
       });
     } finally {
@@ -96,20 +99,17 @@ const PhysicalAssetManagement = () => {
       });
       loadAssets();
     } catch (error) {
+      console.error('Error deleting asset:', error);
       toast({
         title: "Error",
-        description: "Failed to delete physical asset",
+        description: error instanceof Error ? error.message : "Failed to delete physical asset",
         variant: "destructive",
       });
     }
   };
 
-  const handleAssignAsset = (asset: PhysicalAsset) => {
-    setSelectedAssetForAssignment(asset);
-    setAssignmentModalOpen(true);
-  };
-
   const handleAssignToStudent = (asset: PhysicalAsset) => {
+    console.log('Opening student assignment modal for asset:', asset.name);
     setSelectedAssetForAssignment(asset);
     setStudentAssignmentModalOpen(true);
   };
@@ -123,9 +123,10 @@ const PhysicalAssetManagement = () => {
       });
       loadAssets();
     } catch (error) {
+      console.error('Error updating asset status:', error);
       toast({
         title: "Error",
-        description: "Failed to update asset status",
+        description: error instanceof Error ? error.message : "Failed to update asset status",
         variant: "destructive",
       });
     }
@@ -142,9 +143,10 @@ const PhysicalAssetManagement = () => {
       });
       loadAssets();
     } catch (error) {
+      console.error('Error returning asset:', error);
       toast({
         title: "Error",
-        description: "Failed to return asset",
+        description: error instanceof Error ? error.message : "Failed to return asset",
         variant: "destructive",
       });
     }
@@ -159,9 +161,10 @@ const PhysicalAssetManagement = () => {
       });
       loadAssets();
     } catch (error) {
+      console.error('Error updating asset status:', error);
       toast({
         title: "Error",
-        description: "Failed to update asset status",
+        description: error instanceof Error ? error.message : "Failed to update asset status",
         variant: "destructive",
       });
     }
@@ -234,6 +237,7 @@ const PhysicalAssetManagement = () => {
         size="sm"
         onClick={() => handleViewHistory(asset)}
         className="text-purple-600 hover:text-purple-700"
+        title="View History"
       >
         <History className="w-4 h-4" />
       </Button>
@@ -241,20 +245,6 @@ const PhysicalAssetManagement = () => {
 
     // Status-specific action buttons
     switch (asset.status) {
-      case 'available':
-        buttons.push(
-          <Button
-            key="assign"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleAssignAsset(asset)}
-            className="text-green-600 hover:text-green-700"
-          >
-            <UserPlus className="w-4 h-4" />
-          </Button>
-        );
-        break;
-      
       case 'rental_in_progress':
         buttons.push(
           <Button
@@ -263,6 +253,7 @@ const PhysicalAssetManagement = () => {
             size="sm"
             onClick={() => handleMarkReadyToReturn(asset)}
             className="text-yellow-600 hover:text-yellow-700"
+            title="Mark Ready to Return"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -277,6 +268,7 @@ const PhysicalAssetManagement = () => {
             size="sm"
             onClick={() => handleReturnAsset(asset)}
             className="text-orange-600 hover:text-orange-700"
+            title="Mark as Returned"
           >
             <CheckCircle className="w-4 h-4" />
           </Button>
@@ -291,6 +283,7 @@ const PhysicalAssetManagement = () => {
             size="sm"
             onClick={() => handleMarkAsAvailable(asset)}
             className="text-green-600 hover:text-green-700"
+            title="Mark as Available"
           >
             <CheckCircle className="w-4 h-4" />
           </Button>
@@ -306,6 +299,7 @@ const PhysicalAssetManagement = () => {
         size="sm"
         onClick={() => handleEditAsset(asset)}
         className="text-blue-600 hover:text-blue-700"
+        title="Edit Asset"
       >
         <Edit className="w-4 h-4" />
       </Button>,
@@ -315,6 +309,7 @@ const PhysicalAssetManagement = () => {
         size="sm"
         onClick={() => handleDeleteAsset(asset)}
         className="text-red-600 hover:text-red-700"
+        title="Delete Asset"
       >
         <Trash2 className="w-4 h-4" />
       </Button>
@@ -375,6 +370,24 @@ const PhysicalAssetManagement = () => {
                   <option value="lost">Lost</option>
                 </select>
               </div>
+
+              {loadError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3 mb-6">
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-red-900">Error Loading Assets</h4>
+                    <p className="text-sm text-red-700 mt-1">{loadError}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadAssets}
+                      className="mt-2"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {isLoading ? (
                 <div className="text-center py-8">Loading physical assets...</div>
@@ -452,13 +465,6 @@ const PhysicalAssetManagement = () => {
         onClose={() => setIsFormOpen(false)}
         onSuccess={loadAssets}
         editingAsset={editingAsset}
-      />
-
-      <EnhancedAssetAssignmentModal
-        isOpen={assignmentModalOpen}
-        onClose={() => setAssignmentModalOpen(false)}
-        onSuccess={loadAssets}
-        asset={selectedAssetForAssignment}
       />
 
       <StudentAssignmentModal

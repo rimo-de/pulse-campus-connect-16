@@ -81,11 +81,21 @@ const PhysicalAssetForm = ({ isOpen, onClose, onSuccess, editingAsset }: Physica
       onClose();
     } catch (error) {
       console.error('Error saving physical asset:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save physical asset",
-        variant: "destructive",
-      });
+      
+      // Handle specific duplicate serial number error
+      if (error instanceof Error && error.message.includes('duplicate key value violates unique constraint')) {
+        toast({
+          title: "Duplicate Serial Number",
+          description: "This serial number already exists. Please use a different serial number.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to save physical asset",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -126,8 +136,11 @@ const PhysicalAssetForm = ({ isOpen, onClose, onSuccess, editingAsset }: Physica
                     id="serial_number"
                     value={formData.serial_number}
                     onChange={(e) => setFormData({...formData, serial_number: e.target.value})}
-                    placeholder="Enter serial number"
+                    placeholder="Enter unique serial number"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave empty if no serial number available
+                  </p>
                 </div>
 
                 <div>
@@ -150,6 +163,7 @@ const PhysicalAssetForm = ({ isOpen, onClose, onSuccess, editingAsset }: Physica
                       <SelectItem value="available">Available</SelectItem>
                       <SelectItem value="rental_in_progress">Rental in Progress</SelectItem>
                       <SelectItem value="ready_to_return">Ready to Return</SelectItem>
+                      <SelectItem value="returned">Returned</SelectItem>
                       <SelectItem value="maintenance">Maintenance</SelectItem>
                       <SelectItem value="lost">Lost</SelectItem>
                     </SelectContent>
@@ -162,9 +176,10 @@ const PhysicalAssetForm = ({ isOpen, onClose, onSuccess, editingAsset }: Physica
                     id="price_per_month"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price_per_month}
                     onChange={(e) => setFormData({...formData, price_per_month: e.target.value})}
-                    placeholder="Enter monthly rental price"
+                    placeholder="0.00"
                   />
                 </div>
               </div>
