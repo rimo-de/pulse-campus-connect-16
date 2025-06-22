@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +8,8 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { studentCourseAssignmentService } from '@/services/studentCourseAssignmentService';
 import { courseScheduleService } from '@/services/courseScheduleService';
-import type { StudentCourseAssignment, CourseSchedule } from '@/types/student';
+import type { StudentCourseAssignment } from '@/types/student';
+import type { CourseSchedule } from '@/types/course';
 
 const EnrolledStudentsView = () => {
   const [schedules, setSchedules] = useState<CourseSchedule[]>([]);
