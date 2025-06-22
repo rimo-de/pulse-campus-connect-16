@@ -65,7 +65,6 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       label: "Students",
       items: [
         { id: "maintain-students", title: "Maintain Students", icon: Users },
-        { id: "view-enrolled-students", title: "View Enrolled Students", icon: UserCheck },
       ]
     },
     {
@@ -74,6 +73,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "create-course", title: "Maintain Course", icon: PlusCircle },
         { id: "course-schedule", title: "Course Schedule", icon: Calendar },
+        { id: "view-enrolled-students", title: "View Enrolled Students", icon: UserCheck },
       ]
     },
     {
