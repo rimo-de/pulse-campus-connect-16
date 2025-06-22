@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Sidebar,
@@ -66,6 +65,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       label: "Students",
       items: [
         { id: "maintain-students", title: "Maintain Students", icon: Users },
+        { id: "view-enrolled-students", title: "View Enrolled Students", icon: UserCheck },
       ]
     },
     {

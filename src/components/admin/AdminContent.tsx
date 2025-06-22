@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Users, 
@@ -13,6 +12,7 @@ import {
 import StudentManagement from './StudentManagement';
 import CourseManagement from './CourseManagement';
 import CourseScheduleManagement from './CourseScheduleManagement';
+import EnrolledStudentsView from './EnrolledStudentsView';
 import DashboardOverview from './dashboard/DashboardOverview';
 import PlaceholderContent from './dashboard/PlaceholderContent';
 
@@ -26,6 +26,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <DashboardOverview />;
     case 'maintain-students':
       return <StudentManagement />;
+    case 'view-enrolled-students':
+      return <EnrolledStudentsView />;
     case 'create-course':
       return <CourseManagement />;
     case 'course-schedule':
