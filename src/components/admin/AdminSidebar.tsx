@@ -83,7 +83,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "courses", title: "Courses", icon: BookOpen },
         { id: "schedules", title: "Schedules", icon: Calendar },
-        { id: "assets", title: "Assets", icon: Download }
+        { id: "assets", title: "Digital Assets", icon: Download }
       ]
     },
     {
