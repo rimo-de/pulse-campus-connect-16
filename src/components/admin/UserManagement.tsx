@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UserPlus, Search, Edit, Trash2, Mail, UserCog } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, UserCog, RefreshCw } from 'lucide-react';
 import { userService, type AppUser } from '@/services/userService';
 import { useToast } from '@/hooks/use-toast';
 import UserForm from './UserForm';
@@ -20,6 +20,7 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const [showUserForm, setShowUserForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,12 +31,20 @@ const UserManagement = () => {
     filterUsers();
   }, [users, searchTerm]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (showRefreshingState = false) => {
     try {
-      setIsLoading(true);
+      if (showRefreshingState) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      console.log('Loading users...');
       const usersData = await userService.getAllUsers();
+      console.log('Loaded users:', usersData);
       setUsers(usersData);
     } catch (error) {
+      console.error('Error loading users:', error);
       toast({
         title: "Error",
         description: "Failed to load users",
@@ -43,7 +52,12 @@ const UserManagement = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadUsers(true);
   };
 
   const filterUsers = () => {
@@ -119,12 +133,24 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-3">
-        <UserCog className="w-8 h-8 text-blue-600" />
-        <div>
-          <h2 className="text-2xl font-bold edu-gradient-text">User Management</h2>
-          <p className="text-gray-600">Manage system users and their roles</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <UserCog className="w-8 h-8 text-blue-600" />
+          <div>
+            <h2 className="text-2xl font-bold edu-gradient-text">User Management</h2>
+            <p className="text-gray-600">Manage system users and their roles</p>
+          </div>
         </div>
+        
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center space-x-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>Refresh</span>
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -159,12 +185,12 @@ const UserManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Admins</p>
+                <p className="text-sm font-medium text-gray-600">Students</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role?.role_name === 'admin').length}
+                  {users.filter(u => u.role?.role_name === 'student').length}
                 </p>
               </div>
-              <UserCog className="w-8 h-8 text-red-600" />
+              <UserPlus className="w-8 h-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -173,12 +199,12 @@ const UserManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Students</p>
+                <p className="text-sm font-medium text-gray-600">Trainers</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role?.role_name === 'student').length}
+                  {users.filter(u => u.role?.role_name === 'trainer').length}
                 </p>
               </div>
-              <UserPlus className="w-8 h-8 text-purple-600" />
+              <UserCog className="w-8 h-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -225,12 +251,19 @@ const UserManagement = () => {
       {/* Users Table */}
       <Card className="edu-card">
         <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Manage all system users and their permissions</CardDescription>
+          <CardTitle>System Users</CardTitle>
+          <CardDescription>
+            All users in the system including those created through invitations
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading users...</div>
+            <div className="text-center py-8">
+              <div className="flex items-center justify-center space-x-2">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Loading users...</span>
+              </div>
+            </div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchTerm ? 'No users found matching your search.' : 'No users found.'}
