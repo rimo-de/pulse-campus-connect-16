@@ -30,6 +30,7 @@ const LoginForm = () => {
     }
 
     try {
+      console.log('Attempting login with:', { email, password: '***' });
       const success = await login(email, password);
       
       if (success) {
@@ -38,7 +39,7 @@ const LoginForm = () => {
           description: "Welcome to Digital4 Pulse!",
         });
       } else {
-        setError('Invalid email or password. Please try again.');
+        setError('Invalid email or password. Please check your credentials and try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -51,6 +52,7 @@ const LoginForm = () => {
   const handleDemoLogin = () => {
     setEmail('admin@digital4pulse.edu');
     setPassword('password123');
+    setError(''); // Clear any previous errors
   };
 
   return (

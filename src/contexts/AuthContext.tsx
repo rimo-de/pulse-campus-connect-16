@@ -49,9 +49,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
 
-      // Simple password verification (decode base64 and compare)
-      const storedPassword = atob(userData.password_hash);
-      if (storedPassword !== password) {
+      // Password verification - the password was stored using encode(sha256('password123'::bytea), 'base64')
+      // So we need to create the same hash to compare
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = new Uint8Array(hashBuffer);
+      const hashBase64 = btoa(String.fromCharCode(...hashArray));
+
+      if (userData.password_hash !== hashBase64) {
         console.error('Invalid password');
         return false;
       }
