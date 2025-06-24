@@ -25,23 +25,47 @@ export const inviteService = {
     return result;
   },
 
-  // Get role ID by role name with better error handling
+  // Get role ID by role name with improved error handling
   async getRoleId(roleName: string): Promise<string | null> {
     try {
-      console.log(`Getting role ID for: ${roleName}`);
-      const roles = await userService.getAllRoles();
-      console.log('Available roles:', roles);
+      console.log(`Looking up role: ${roleName}`);
       
-      const role = roles.find(r => r.role_name.toLowerCase() === roleName.toLowerCase());
-      if (!role) {
-        console.error(`Role '${roleName}' not found in available roles:`, roles.map(r => r.role_name));
+      const { data: roles, error } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('role_name', roleName.toLowerCase())
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching role:', error);
         return null;
       }
-      
-      console.log(`Found role ID for ${roleName}:`, role.id);
-      return role.id;
+
+      if (!roles || roles.length === 0) {
+        console.error(`Role '${roleName}' not found in database`);
+        // Try to create the role if it doesn't exist
+        const { data: newRole, error: createError } = await supabase
+          .from('roles')
+          .insert({
+            role_name: roleName.toLowerCase(),
+            description: `${roleName.charAt(0).toUpperCase() + roleName.slice(1)} role`
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating role:', createError);
+          return null;
+        }
+
+        console.log(`Created new role: ${roleName}`, newRole);
+        return newRole.id;
+      }
+
+      console.log(`Found role ${roleName}:`, roles[0].id);
+      return roles[0].id;
     } catch (error) {
-      console.error('Error getting role ID:', error);
+      console.error('Unexpected error getting role ID:', error);
       return null;
     }
   },
@@ -49,8 +73,18 @@ export const inviteService = {
   // Check if user already exists
   async checkUserExists(email: string): Promise<boolean> {
     try {
-      const users = await userService.getAllUsers();
-      return users.some(user => user.email.toLowerCase() === email.toLowerCase());
+      const { data: users, error } = await supabase
+        .from('app_users')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking user existence:', error);
+        return false;
+      }
+
+      return users && users.length > 0;
     } catch (error) {
       console.error('Error checking if user exists:', error);
       return false;
@@ -77,7 +111,7 @@ export const inviteService = {
       }
 
       console.log('Invite email sent successfully:', data);
-      return data?.success || false;
+      return data?.success === true;
     } catch (error) {
       console.error('Error invoking email function:', error);
       return false;
@@ -106,10 +140,10 @@ export const inviteService = {
       // Get role ID based on user type
       const roleId = await this.getRoleId(userData.userType);
       if (!roleId) {
-        console.error(`Role '${userData.userType}' not found`);
+        console.error(`Failed to get or create role '${userData.userType}'`);
         return { 
           success: false, 
-          error: `Role '${userData.userType}' not found. Please ensure roles are properly configured.` 
+          error: `Could not find or create role '${userData.userType}'. Please check your database configuration.` 
         };
       }
 
@@ -117,7 +151,7 @@ export const inviteService = {
 
       // Create user record
       const newUser = await userService.createUser({
-        email: userData.email,
+        email: userData.email.toLowerCase(),
         name: userData.name,
         role_id: roleId,
         password: tempPassword,

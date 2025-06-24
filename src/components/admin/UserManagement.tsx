@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UserPlus, Search, Edit, Trash2, UserCog, RefreshCw } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, UserCog, RefreshCw, Shield } from 'lucide-react';
 import { userService, type AppUser } from '@/services/userService';
 import { useToast } from '@/hooks/use-toast';
 import UserForm from './UserForm';
+import RoleManagement from './RoleManagement';
 import { format } from 'date-fns';
 
 const UserManagement = () => {
@@ -19,6 +19,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const [showUserForm, setShowUserForm] = useState(false);
+  const [showRoleManagement, setShowRoleManagement] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
@@ -131,6 +132,10 @@ const UserManagement = () => {
     return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
 
+  if (showRoleManagement) {
+    return <RoleManagement />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -142,15 +147,26 @@ const UserManagement = () => {
           </div>
         </div>
         
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center space-x-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowRoleManagement(true)}
+            className="flex items-center space-x-2"
+          >
+            <Shield className="w-4 h-4" />
+            <span>Manage Roles</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center space-x-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

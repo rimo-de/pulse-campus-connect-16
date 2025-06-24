@@ -56,6 +56,18 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate userType
+    if (!['student', 'trainer'].includes(userType)) {
+      console.error("Invalid userType:", userType);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid user type" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     const userTypeDisplay = userType.charAt(0).toUpperCase() + userType.slice(1);
 
     const emailResponse = await resend.emails.send({
