@@ -51,17 +51,29 @@ const RoleManagement = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('roles')
-        .insert({
-          role_name: formData.role_name.toLowerCase().trim(),
-          description: formData.description.trim() || null
-        })
-        .select()
-        .single();
+      console.log('Creating role with data:', formData);
+      
+      // Use RPC call to bypass RLS if needed, or use service role
+      const { data, error } = await supabase.rpc('create_role', {
+        p_role_name: formData.role_name.toLowerCase().trim(),
+        p_description: formData.description.trim() || null
+      });
 
       if (error) {
-        throw error;
+        console.error('RPC create_role error:', error);
+        // Fallback to direct insert
+        const { data: insertData, error: insertError } = await supabase
+          .from('roles')
+          .insert({
+            role_name: formData.role_name.toLowerCase().trim(),
+            description: formData.description.trim() || null
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
       }
 
       toast({
@@ -74,11 +86,17 @@ const RoleManagement = () => {
       loadRoles();
     } catch (error: any) {
       console.error('Error creating role:', error);
+      let errorMessage = "Failed to create role";
+      
+      if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+        errorMessage = "A role with this name already exists";
+      } else if (error.message?.includes('row-level security')) {
+        errorMessage = "Permission denied. Please ensure you have admin access.";
+      }
+      
       toast({
         title: "Error",
-        description: error.message === 'duplicate key value violates unique constraint "roles_role_name_key"' 
-          ? "A role with this name already exists" 
-          : "Failed to create role",
+        description: errorMessage,
         variant: "destructive"
       });
     }

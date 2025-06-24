@@ -26,7 +26,8 @@ import {
   Minus,
   Package,
   Eye,
-  UserCog
+  UserCog,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -102,7 +103,8 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       label: "User Management",
       icon: UserCog,
       items: [
-        { id: "user-management", title: "Manage Users", icon: UserCog }
+        { id: "user-management", title: "Manage Users", icon: UserCog },
+        { id: "role-management", title: "Manage Roles", icon: Shield }
       ]
     }
   ];
