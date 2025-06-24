@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { StudentCourseAssignment } from '@/types/student';
+import type { CourseSchedule } from '@/types/course';
 
 export const studentCourseAssignmentService = {
   async getAssignmentsBySchedule(scheduleId: string): Promise<StudentCourseAssignment[]> {
@@ -131,7 +132,7 @@ export const studentCourseAssignmentService = {
     })) as StudentCourseAssignment[];
   },
 
-  async getSchedulesByStudent(studentEmail: string) {
+  async getSchedulesByStudent(studentEmail: string): Promise<CourseSchedule[]> {
     // First get the student by email
     const { data: studentData, error: studentError } = await supabase
       .from('student_headers')
@@ -165,8 +166,11 @@ export const studentCourseAssignmentService = {
       throw new Error('Failed to fetch student schedules');
     }
 
-    // Extract the course schedules
-    return (data || []).map(item => item.course_schedules);
+    // Extract the course schedules and properly type the status field
+    return (data || []).map(item => ({
+      ...item.course_schedules,
+      status: item.course_schedules.status as 'upcoming' | 'ongoing' | 'completed'
+    }));
   },
 
   async assignStudentsToSchedule(scheduleId: string, studentIds: string[]): Promise<void> {
