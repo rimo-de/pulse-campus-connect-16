@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { studentCourseAssignmentService } from '@/services/studentCourseAssignmentService';
-import { courseScheduleService } from '@/services/courseScheduleService';
 import type { CourseSchedule } from '@/types/course';
 import { format } from 'date-fns';
 
@@ -34,22 +32,20 @@ const StudentContent = ({ activeSection }: StudentContentProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.email) {
       loadStudentCourses();
     }
-  }, [user?.id]);
+  }, [user?.email]);
 
   const loadStudentCourses = async () => {
     try {
       setIsLoading(true);
-      // Get all schedules and filter for this student
-      const allSchedules = await courseScheduleService.getAllSchedules();
-      
-      // For now, we'll show all schedules as assigned to this student
-      // In a real implementation, you'd filter based on student assignments
-      setAssignedSchedules(allSchedules);
+      // Get schedules specifically assigned to this student
+      const schedules = await studentCourseAssignmentService.getSchedulesByStudent(user?.email || '');
+      setAssignedSchedules(schedules);
     } catch (error) {
       console.error('Error loading student courses:', error);
+      setAssignedSchedules([]);
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { StudentCourseAssignment } from '@/types/student';
 
@@ -59,6 +58,115 @@ export const studentCourseAssignmentService = {
         updated_at: assignment.student.updated_at,
       } : undefined
     })) as StudentCourseAssignment[];
+  },
+
+  async getAssignmentsByStudent(studentEmail: string): Promise<StudentCourseAssignment[]> {
+    // First get the student by email
+    const { data: studentData, error: studentError } = await supabase
+      .from('student_headers')
+      .select('id')
+      .eq('email', studentEmail)
+      .single();
+
+    if (studentError || !studentData) {
+      console.log('Student not found:', studentEmail);
+      return [];
+    }
+
+    // Get assignments for this specific student
+    const { data, error } = await supabase
+      .from('student_course_assignments')
+      .select(`
+        *,
+        student:student_headers (
+          id,
+          first_name,
+          last_name,
+          gender,
+          email,
+          mobile_number,
+          nationality,
+          created_at,
+          updated_at,
+          student_addresses (
+            street,
+            postal_code,
+            city
+          ),
+          student_enrollments (
+            education_background,
+            english_proficiency,
+            german_proficiency
+          )
+        )
+      `)
+      .eq('student_id', studentData.id)
+      .order('enrollment_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching student assignments:', error);
+      throw new Error('Failed to fetch student assignments');
+    }
+
+    // Transform the joined data to match CompleteStudent interface
+    return (data || []).map(assignment => ({
+      ...assignment,
+      student: assignment.student ? {
+        id: assignment.student.id,
+        first_name: assignment.student.first_name,
+        last_name: assignment.student.last_name,
+        gender: assignment.student.gender || '',
+        email: assignment.student.email,
+        mobile_number: assignment.student.mobile_number || '',
+        nationality: assignment.student.nationality,
+        street: assignment.student.student_addresses?.[0]?.street || '',
+        postal_code: assignment.student.student_addresses?.[0]?.postal_code || '',
+        city: assignment.student.student_addresses?.[0]?.city || '',
+        education_background: assignment.student.student_enrollments?.[0]?.education_background || '',
+        english_proficiency: assignment.student.student_enrollments?.[0]?.english_proficiency || '',
+        german_proficiency: assignment.student.student_enrollments?.[0]?.german_proficiency || '',
+        created_at: assignment.student.created_at,
+        updated_at: assignment.student.updated_at,
+      } : undefined
+    })) as StudentCourseAssignment[];
+  },
+
+  async getSchedulesByStudent(studentEmail: string) {
+    // First get the student by email
+    const { data: studentData, error: studentError } = await supabase
+      .from('student_headers')
+      .select('id')
+      .eq('email', studentEmail)
+      .single();
+
+    if (studentError || !studentData) {
+      console.log('Student not found:', studentEmail);
+      return [];
+    }
+
+    // Get schedules for courses assigned to this student
+    const { data, error } = await supabase
+      .from('student_course_assignments')
+      .select(`
+        schedule_id,
+        course_schedules!inner (
+          *,
+          course:courses (*),
+          course_offering:course_offerings (
+            *,
+            delivery_mode:delivery_modes (*)
+          )
+        )
+      `)
+      .eq('student_id', studentData.id);
+
+    if (error) {
+      console.error('Error fetching student schedules:', error);
+      throw new Error('Failed to fetch student schedules');
+    }
+
+    // Extract the course schedules
+    return (data || []).map(item => item.course_schedules);
   },
 
   async assignStudentsToSchedule(scheduleId: string, studentIds: string[]): Promise<void> {
