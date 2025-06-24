@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CompleteStudent } from '@/types/student';
 import { StudentService } from '@/services/studentService';
 import StudentForm from './StudentForm';
+import InviteButton from './InviteButton';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState<CompleteStudent[]>([]);
@@ -254,6 +254,11 @@ const StudentManagement = () => {
                           <TableCell className="capitalize">{student.education_background}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
+                              <InviteButton
+                                name={`${student.first_name} ${student.last_name}`}
+                                email={student.email}
+                                userType="student"
+                              />
                               <Button
                                 size="sm"
                                 variant="outline"

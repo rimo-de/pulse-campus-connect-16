@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import { TrainerService } from '@/services/trainerService';
 import { courseService } from '@/services/courseService';
 import TrainerFormModal from './TrainerFormModal';
 import TrainerAvatar from './TrainerAvatar';
+import InviteButton from './InviteButton';
 import type { TrainerWithFiles } from '@/types/trainer';
 import type { Course } from '@/types/course';
 
@@ -263,6 +263,11 @@ const TrainerManagement = () => {
                     </div>
                     
                     <div className="flex items-center space-x-2 ml-4">
+                      <InviteButton
+                        name={`${trainer.first_name} ${trainer.last_name}`}
+                        email={trainer.email}
+                        userType="trainer"
+                      />
                       <Button
                         variant="ghost"
                         size="sm"
