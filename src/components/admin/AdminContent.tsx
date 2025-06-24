@@ -8,6 +8,7 @@ import CourseScheduleManagement from './CourseScheduleManagement';
 import AssetManagement from './AssetManagement';
 import PhysicalAssetManagement from './PhysicalAssetManagement';
 import AssetAssignmentView from './AssetAssignmentView';
+import UserManagement from './UserManagement';
 
 interface AdminContentProps {
   activeSection: string;
@@ -31,6 +32,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <PhysicalAssetManagement />;
     case 'view-asset-assignments':
       return <AssetAssignmentView />;
+    case 'user-management':
+      return <UserManagement />;
     default:
       return <DashboardOverview />;
   }

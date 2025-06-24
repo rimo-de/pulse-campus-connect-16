@@ -25,7 +25,8 @@ import {
   Plus,
   Minus,
   Package,
-  Eye
+  Eye,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,6 +42,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     trainers: true,
     courses: true,
     assets: true,
+    users: true,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -93,6 +95,14 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
       items: [
         { id: "maintain-assets", title: "Maintain Assets", icon: Package },
         { id: "view-asset-assignments", title: "View Asset Assignments", icon: Eye }
+      ]
+    },
+    {
+      key: "users" as const,
+      label: "User Management",
+      icon: UserCog,
+      items: [
+        { id: "user-management", title: "Manage Users", icon: UserCog }
       ]
     }
   ];
