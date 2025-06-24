@@ -9,6 +9,7 @@ import AssetManagement from './AssetManagement';
 import PhysicalAssetManagement from './PhysicalAssetManagement';
 import AssetAssignmentView from './AssetAssignmentView';
 import UserManagement from './UserManagement';
+import RoleManagement from './RoleManagement';
 
 interface AdminContentProps {
   activeSection: string;
@@ -34,6 +35,8 @@ const AdminContent = ({ activeSection }: AdminContentProps) => {
       return <AssetAssignmentView />;
     case 'user-management':
       return <UserManagement />;
+    case 'role-management':
+      return <RoleManagement />;
     default:
       return <DashboardOverview />;
   }
