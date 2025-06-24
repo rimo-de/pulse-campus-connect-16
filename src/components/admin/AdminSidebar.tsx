@@ -21,12 +21,11 @@ import {
   BookOpen,
   Calendar,
   GraduationCap,
-  Settings,
-  BarChart3,
-  FileText,
   Download,
   Plus,
-  Minus
+  Minus,
+  Package,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,6 +40,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
     students: true,
     trainers: true,
     courses: true,
+    assets: true,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -84,6 +84,15 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
         { id: "courses", title: "Courses", icon: BookOpen },
         { id: "schedules", title: "Schedules", icon: Calendar },
         { id: "assets", title: "Assets", icon: Download }
+      ]
+    },
+    {
+      key: "assets" as const,
+      label: "Assets",
+      icon: Package,
+      items: [
+        { id: "maintain-assets", title: "Maintain Assets", icon: Package },
+        { id: "view-asset-assignments", title: "View Asset Assignments", icon: Eye }
       ]
     }
   ];
