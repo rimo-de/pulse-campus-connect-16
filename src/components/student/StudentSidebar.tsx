@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -12,22 +12,17 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   LayoutDashboard,
   BookOpen,
   FileText,
-  BarChart3,
   Calendar,
-  Award,
-  Users,
-  Settings,
-  Clock,
   GraduationCap,
-  PlayCircle,
-  MessageCircle,
-  Bell,
-  User
+  Plus,
+  Minus,
+  PlayCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,51 +33,35 @@ interface StudentSidebarProps {
 
 const StudentSidebar = ({ activeSection, onSectionChange }: StudentSidebarProps) => {
   const { user } = useAuth();
+  const [openSections, setOpenSections] = useState({
+    courses: true,
+  });
 
-  const navigationGroups = [
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const navigationItems = [
     {
-      label: "Overview",
-      items: [
-        { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
-      ]
-    },
+      id: "dashboard",
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      type: "single" as const
+    }
+  ];
+
+  const collapsibleGroups = [
     {
-      label: "Learning",
+      key: "courses" as const,
+      label: "Courses",
+      icon: BookOpen,
       items: [
         { id: "my-courses", title: "My Courses", icon: BookOpen },
-        { id: "assignments", title: "Assignments", icon: FileText },
-        { id: "study-materials", title: "Study Materials", icon: PlayCircle },
-        { id: "progress-tracking", title: "Progress Tracking", icon: BarChart3 },
-      ]
-    },
-    {
-      label: "Schedule",
-      items: [
-        { id: "class-schedule", title: "Class Schedule", icon: Calendar },
-        { id: "upcoming-events", title: "Upcoming Events", icon: Clock },
-        { id: "calendar-view", title: "Calendar View", icon: Calendar },
-      ]
-    },
-    {
-      label: "Academic",
-      items: [
-        { id: "grades-results", title: "Grades & Results", icon: Award },
-        { id: "certificates", title: "Certificates", icon: GraduationCap },
-      ]
-    },
-    {
-      label: "Community",
-      items: [
-        { id: "study-groups", title: "Study Groups", icon: Users },
-        { id: "forums", title: "Forums", icon: MessageCircle },
-      ]
-    },
-    {
-      label: "Settings",
-      items: [
-        { id: "profile", title: "Profile", icon: User },
-        { id: "notifications", title: "Notifications", icon: Bell },
-        { id: "preferences", title: "Preferences", icon: Settings },
+        { id: "course-materials", title: "Course Materials", icon: PlayCircle },
+        { id: "schedules", title: "Schedules", icon: Calendar }
       ]
     }
   ];
@@ -102,27 +81,66 @@ const StudentSidebar = ({ activeSection, onSectionChange }: StudentSidebarProps)
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        {navigationGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-2 py-1">
-              {group.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => onSectionChange(item.id)}
-                      isActive={activeSection === item.id}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
+        {/* Single Dashboard Item */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onSectionChange(item.id)}
+                    isActive={activeSection === item.id}
+                    className="w-full justify-start"
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Collapsible Groups */}
+        {collapsibleGroups.map((group) => (
+          <SidebarGroup key={group.key}>
+            <Collapsible 
+              open={openSections[group.key]} 
+              onOpenChange={() => toggleSection(group.key)}
+            >
+              <CollapsibleTrigger asChild>
+                <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-2 py-1 cursor-pointer hover:text-gray-700 flex items-center justify-between group">
+                  <div className="flex items-center space-x-2">
+                    <group.icon className="w-4 h-4" />
+                    <span>{group.label}</span>
+                  </div>
+                  {openSections[group.key] ? (
+                    <Minus className="w-3 h-3 transition-transform group-hover:scale-110" />
+                  ) : (
+                    <Plus className="w-3 h-3 transition-transform group-hover:scale-110" />
+                  )}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="transition-all duration-200">
+                <SidebarGroupContent className="ml-6">
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => onSectionChange(item.id)}
+                          isActive={activeSection === item.id}
+                          className="w-full justify-start text-sm"
+                        >
+                          <item.icon className="w-3 h-3" />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
           </SidebarGroup>
         ))}
       </SidebarContent>

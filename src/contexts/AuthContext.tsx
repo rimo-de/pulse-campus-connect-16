@@ -16,16 +16,16 @@ const mockUsers: User[] = [
   },
   {
     id: '2',
-    email: 'student@digital4pulse.edu',
-    name: 'Alex Chen',
+    email: 'savya.m@gmail.com',
+    name: 'Savya Maharaj',
     role: 'student',
     institutionId: 'inst_001',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
   },
   {
     id: '3',
-    email: 'trainer@digital4pulse.edu',
-    name: 'Dr. Emily Rodriguez',
+    email: 'shams@gmail.com',
+    name: 'Shams Ahmed',
     role: 'trainer',
     institutionId: 'inst_001',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face'
