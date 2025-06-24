@@ -31,11 +31,44 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { name, email, password, userType }: InviteEmailRequest = requestBody;
 
-    // Validate required fields
-    if (!name || !email || !password || !userType) {
-      console.error("Missing required fields:", { name: !!name, email: !!email, password: !!password, userType: !!userType });
+    // Enhanced validation
+    if (!name?.trim()) {
+      console.error("Missing or empty name field");
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields" }),
+        JSON.stringify({ success: false, error: "Name is required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!email?.trim()) {
+      console.error("Missing or empty email field");
+      return new Response(
+        JSON.stringify({ success: false, error: "Email is required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!password?.trim()) {
+      console.error("Missing or empty password field");
+      return new Response(
+        JSON.stringify({ success: false, error: "Password is required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!userType?.trim()) {
+      console.error("Missing or empty userType field");
+      return new Response(
+        JSON.stringify({ success: false, error: "User type is required" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -60,9 +93,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (!['student', 'trainer'].includes(userType)) {
       console.error("Invalid userType:", userType);
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid user type" }),
+        JSON.stringify({ success: false, error: "Invalid user type. Must be 'student' or 'trainer'" }),
         {
           status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Check if Resend API key is configured
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.error("RESEND_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Email service not configured" }),
+        {
+          status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
@@ -72,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Digital4 Bootcamp <onboarding@resend.dev>",
-      to: [email],
+      to: [email.trim()],
       subject: `Welcome to Digital4 Bootcamp - ${userTypeDisplay} Access`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
@@ -82,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="width: 50px; height: 3px; background-color: #2563eb; margin: 10px auto;"></div>
             </div>
             
-            <h2 style="color: #1f2937; margin-bottom: 20px;">Welcome ${name}!</h2>
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Welcome ${name.trim()}!</h2>
             
             <p style="color: #4b5563; line-height: 1.6; margin-bottom: 20px;">
               Your ${userTypeDisplay.toLowerCase()} account has been created for the Digital4 Bootcamp platform. 
@@ -91,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #2563eb;">
               <h3 style="margin: 0 0 15px 0; color: #1f2937;">Login Credentials</h3>
-              <p style="margin: 8px 0; color: #374151;"><strong>Username:</strong> ${email}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Username:</strong> ${email.trim()}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${password}</code></p>
             </div>
             
@@ -116,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Invite email sent successfully to:", email, "Response:", emailResponse);
+    console.log("Invite email sent successfully to:", email, "Response ID:", emailResponse.data?.id);
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
@@ -127,8 +172,17 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-invite-email function:", error);
+    
+    // Enhanced error response
+    const errorMessage = error?.message || "Internal server error";
+    const isResendError = error?.name === "ResendError" || errorMessage.includes("Resend");
+    
     return new Response(
-      JSON.stringify({ success: false, error: error.message || "Internal server error" }),
+      JSON.stringify({ 
+        success: false, 
+        error: isResendError ? "Email delivery service error" : "Failed to send invitation email",
+        details: errorMessage
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

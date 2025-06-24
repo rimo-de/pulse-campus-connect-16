@@ -25,7 +25,7 @@ export const inviteService = {
     return result;
   },
 
-  // Get role ID by role name with improved error handling
+  // Get role ID by role name - simplified to only lookup existing roles
   async getRoleId(roleName: string): Promise<string | null> {
     try {
       console.log(`Looking up role: ${roleName}`);
@@ -37,32 +37,16 @@ export const inviteService = {
         .limit(1);
 
       if (error) {
-        console.error('Error fetching role:', error);
+        console.error('Database error fetching role:', error);
         return null;
       }
 
       if (!roles || roles.length === 0) {
-        console.error(`Role '${roleName}' not found in database`);
-        // Try to create the role if it doesn't exist
-        const { data: newRole, error: createError } = await supabase
-          .from('roles')
-          .insert({
-            role_name: roleName.toLowerCase(),
-            description: `${roleName.charAt(0).toUpperCase() + roleName.slice(1)} role`
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Error creating role:', createError);
-          return null;
-        }
-
-        console.log(`Created new role: ${roleName}`, newRole);
-        return newRole.id;
+        console.error(`Role '${roleName}' not found in database. Available roles should include: admin, student, trainer`);
+        return null;
       }
 
-      console.log(`Found role ${roleName}:`, roles[0].id);
+      console.log(`Found role ${roleName}:`, roles[0]);
       return roles[0].id;
     } catch (error) {
       console.error('Unexpected error getting role ID:', error);
@@ -92,7 +76,7 @@ export const inviteService = {
   },
 
   // Send invite email with improved error handling
-  async sendInviteEmail(userData: InviteUserData, tempPassword: string): Promise<boolean> {
+  async sendInviteEmail(userData: InviteUserData, tempPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('Sending invite email to:', userData.email);
       
@@ -106,20 +90,27 @@ export const inviteService = {
       });
 
       if (error) {
-        console.error('Error sending invite email:', error);
-        return false;
+        console.error('Error invoking email function:', error);
+        return { success: false, error: `Email service error: ${error.message}` };
       }
 
-      console.log('Invite email sent successfully:', data);
-      return data?.success === true;
+      if (!data?.success) {
+        console.error('Email function returned failure:', data);
+        return { success: false, error: data?.error || 'Email sending failed' };
+      }
+
+      console.log('Invite email sent successfully');
+      return { success: true };
     } catch (error) {
-      console.error('Error invoking email function:', error);
-      return false;
+      console.error('Unexpected error sending email:', error);
+      return { success: false, error: 'Failed to send invitation email' };
     }
   },
 
-  // Main invite function with comprehensive error handling
+  // Main invite function with enhanced error handling and rollback
   async inviteUser(userData: InviteUserData): Promise<InviteResult> {
+    let createdUserId: string | null = null;
+    
     try {
       console.log('Starting invite process for:', userData);
 
@@ -133,21 +124,21 @@ export const inviteService = {
         };
       }
 
-      // Generate temporary password
-      const tempPassword = this.generateTempPassword();
-      console.log('Generated temporary password for:', userData.email);
-      
       // Get role ID based on user type
       const roleId = await this.getRoleId(userData.userType);
       if (!roleId) {
-        console.error(`Failed to get or create role '${userData.userType}'`);
+        console.error(`Failed to find role '${userData.userType}'`);
         return { 
           success: false, 
-          error: `Could not find or create role '${userData.userType}'. Please check your database configuration.` 
+          error: `Role '${userData.userType}' not found. Please contact administrator to ensure required roles are configured.` 
         };
       }
 
       console.log('Creating user with role ID:', roleId);
+
+      // Generate temporary password
+      const tempPassword = this.generateTempPassword();
+      console.log('Generated temporary password for:', userData.email);
 
       // Create user record
       const newUser = await userService.createUser({
@@ -158,17 +149,18 @@ export const inviteService = {
         status: 'active'
       });
 
+      createdUserId = newUser.id;
       console.log('User created successfully:', newUser.id);
 
       // Send invite email
-      const emailSent = await this.sendInviteEmail(userData, tempPassword);
+      const emailResult = await this.sendInviteEmail(userData, tempPassword);
       
-      if (!emailSent) {
+      if (!emailResult.success) {
         console.warn('User created but email failed to send for:', userData.email);
         return { 
           success: true, 
           userId: newUser.id,
-          error: 'User created successfully, but invitation email could not be sent. Please manually provide login credentials.' 
+          error: `User created successfully, but invitation email could not be sent: ${emailResult.error}. Please manually provide login credentials.` 
         };
       }
 
@@ -180,6 +172,18 @@ export const inviteService = {
 
     } catch (error) {
       console.error('Error in invite process:', error);
+      
+      // Rollback: Delete created user if email failed
+      if (createdUserId) {
+        try {
+          console.log('Rolling back user creation due to error:', createdUserId);
+          await userService.deleteUser(createdUserId);
+          console.log('User rollback completed');
+        } catch (rollbackError) {
+          console.error('Failed to rollback user creation:', rollbackError);
+        }
+      }
+      
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'An unexpected error occurred during the invite process'
