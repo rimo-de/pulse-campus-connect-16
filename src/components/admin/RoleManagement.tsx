@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,27 +52,18 @@ const RoleManagement = () => {
     try {
       console.log('Creating role with data:', formData);
       
-      // Use RPC call to bypass RLS if needed, or use service role
-      const { data, error } = await supabase.rpc('create_role', {
-        p_role_name: formData.role_name.toLowerCase().trim(),
-        p_description: formData.description.trim() || null
-      });
+      // Direct insert without RPC call
+      const { data, error } = await supabase
+        .from('roles')
+        .insert({
+          role_name: formData.role_name.toLowerCase().trim(),
+          description: formData.description.trim() || null
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('RPC create_role error:', error);
-        // Fallback to direct insert
-        const { data: insertData, error: insertError } = await supabase
-          .from('roles')
-          .insert({
-            role_name: formData.role_name.toLowerCase().trim(),
-            description: formData.description.trim() || null
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          throw insertError;
-        }
+        throw error;
       }
 
       toast({
