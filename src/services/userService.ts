@@ -52,7 +52,10 @@ export const userService = {
       throw new Error('Failed to fetch users');
     }
 
-    return data || [];
+    return (data || []).map(user => ({
+      ...user,
+      status: user.status as 'active' | 'inactive'
+    }));
   },
 
   async getAllRoles(): Promise<Role[]> {
@@ -93,7 +96,10 @@ export const userService = {
       throw new Error('Failed to create user');
     }
 
-    return data;
+    return {
+      ...data,
+      status: data.status as 'active' | 'inactive'
+    };
   },
 
   async updateUser(userId: string, userData: UpdateUserRequest): Promise<AppUser> {
@@ -112,7 +118,10 @@ export const userService = {
       throw new Error('Failed to update user');
     }
 
-    return data;
+    return {
+      ...data,
+      status: data.status as 'active' | 'inactive'
+    };
   },
 
   async deleteUser(userId: string): Promise<void> {
