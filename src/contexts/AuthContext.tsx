@@ -1,72 +1,93 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, AuthContextType } from '@/types/auth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'admin@digital4pulse.edu',
-    name: 'Sarah Johnson',
-    role: 'admin',
-    institutionId: 'inst_001',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    id: '2',
-    email: 'student@digital4pulse.edu',
-    name: 'Mohammad Rizwan',
-    role: 'student',
-    institutionId: 'inst_001',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-  },
-  {
-    id: '3',
-    email: 'trainer@digital4pulse.edu',
-    name: 'Shams Ahmed',
-    role: 'trainer',
-    institutionId: 'inst_001',
-    avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face'
-  }
-];
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if we have a stored user session
+    const storedUser = localStorage.getItem('digital4pulse_user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('digital4pulse_user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser && password === 'password123') {
-      setUser(foundUser);
-      localStorage.setItem('digital4_pulse_user', JSON.stringify(foundUser));
-      setIsLoading(false);
+    try {
+      console.log('Attempting login for:', email);
+      
+      // Query the app_users table directly with role information
+      const { data: userData, error } = await supabase
+        .from('app_users')
+        .select(`
+          *,
+          role:roles (*)
+        `)
+        .eq('email', email.toLowerCase().trim())
+        .eq('status', 'active')
+        .single();
+
+      if (error) {
+        console.error('Database query error:', error);
+        return false;
+      }
+
+      if (!userData) {
+        console.error('No user found with email:', email);
+        return false;
+      }
+
+      // Simple password verification (decode base64 and compare)
+      const storedPassword = atob(userData.password_hash);
+      if (storedPassword !== password) {
+        console.error('Invalid password');
+        return false;
+      }
+
+      // Create user object
+      const userObj: User = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role?.role_name as 'admin' | 'student' | 'trainer',
+        institutionId: 'digital4pulse',
+        avatar: undefined
+      };
+
+      console.log('Login successful for user:', userObj);
+
+      // Update last login date
+      await supabase
+        .from('app_users')
+        .update({ last_login_date: new Date().toISOString() })
+        .eq('id', userData.id);
+
+      setUser(userObj);
+      localStorage.setItem('digital4pulse_user', JSON.stringify(userObj));
+      
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('digital4_pulse_user');
+    localStorage.removeItem('digital4pulse_user');
   };
-
-  // Check for stored user on mount
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('digital4_pulse_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoading }}>
