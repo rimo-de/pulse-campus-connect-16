@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Search, Filter, Download, Calendar, User, Package } from 'lucide-react';
+import { Eye, Search, Download, Calendar, User, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { physicalAssetService } from '@/services/physicalAssetService';
 
@@ -30,6 +30,7 @@ interface AssetAssignment {
       course_title: string;
     };
   };
+  student_name?: string;
 }
 
 const AssetAssignmentView = () => {
@@ -52,7 +53,30 @@ const AssetAssignmentView = () => {
     try {
       setIsLoading(true);
       const data = await physicalAssetService.getAssignmentHistory();
-      setAssignments(data);
+      
+      // Fetch student names for assignments
+      const assignmentsWithNames = await Promise.all(
+        data.map(async (assignment: AssetAssignment) => {
+          if (assignment.assigned_to_type === 'student') {
+            try {
+              const student = await physicalAssetService.getStudentById(assignment.assigned_to_id);
+              return {
+                ...assignment,
+                student_name: `${student.first_name} ${student.last_name}`
+              };
+            } catch (error) {
+              console.error(`Error fetching student name for ${assignment.assigned_to_id}:`, error);
+              return {
+                ...assignment,
+                student_name: 'Unknown Student'
+              };
+            }
+          }
+          return assignment;
+        })
+      );
+      
+      setAssignments(assignmentsWithNames);
     } catch (error) {
       console.error('Error fetching assignments:', error);
       toast({
@@ -73,7 +97,7 @@ const AssetAssignmentView = () => {
       filtered = filtered.filter(assignment =>
         assignment.physical_assets.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         assignment.physical_assets.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        assignment.assigned_to_id.toLowerCase().includes(searchTerm.toLowerCase())
+        assignment.student_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -182,15 +206,13 @@ const AssetAssignmentView = () => {
                   <TableHead>Assignment Date</TableHead>
                   <TableHead>Return Date</TableHead>
                   <TableHead>Duration</TableHead>
-                  <TableHead>Course</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Notes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAssignments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No asset assignments found
                     </TableCell>
                   </TableRow>
@@ -212,7 +234,10 @@ const AssetAssignmentView = () => {
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm">
-                            {assignment.assigned_to_type === 'student' ? 'Student' : 'Course'}
+                            {assignment.assigned_to_type === 'student' 
+                              ? assignment.student_name || 'Unknown Student'
+                              : 'Course Assignment'
+                            }
                           </span>
                         </div>
                       </TableCell>
@@ -232,21 +257,7 @@ const AssetAssignmentView = () => {
                       <TableCell>
                         <span className="text-sm">{getAssignmentDuration(assignment)}</span>
                       </TableCell>
-                      <TableCell>
-                        {assignment.course_schedules ? (
-                          <span className="text-sm">
-                            {assignment.course_schedules.courses.course_title}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">N/A</span>
-                        )}
-                      </TableCell>
                       <TableCell>{getStatusBadge(assignment)}</TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {assignment.notes || 'No notes'}
-                        </span>
-                      </TableCell>
                     </TableRow>
                   ))
                 )}
