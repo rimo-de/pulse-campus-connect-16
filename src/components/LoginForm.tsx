@@ -39,11 +39,21 @@ const LoginForm = () => {
           description: "Welcome to Digital4 Pulse!",
         });
       } else {
-        setError('Invalid email or password. Please check your credentials and try again.');
+        setError('Invalid email or password. Please verify your credentials.');
+        toast({
+          title: "Login Failed",
+          description: "Please check your email and password and try again.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
       setError('An error occurred during login. Please try again.');
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +62,15 @@ const LoginForm = () => {
   const handleDemoLogin = () => {
     setEmail('admin@digital4pulse.edu');
     setPassword('password123');
-    setError(''); // Clear any previous errors
+    setError('');
+    
+    // Auto-submit the form after setting credentials
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.requestSubmit();
+      }
+    }, 100);
   };
 
   return (
